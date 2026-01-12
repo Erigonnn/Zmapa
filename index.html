@@ -3,63 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA PRO</title>
+    <title>Z-MAPA: SURVIVAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="landing-page">
         <div class="auth-box">
-            <h1 style="color:var(--neon-red); font-size: 3rem; margin:0;">Z-MAPA</h1>
-            <p style="letter-spacing: 5px; font-size: 10px; margin-bottom: 30px;">SYSTEM PRZETRWANIA</p>
+            <h1 class="logo">Z-MAPA</h1>
             <input type="email" id="email" placeholder="Email">
             <input type="password" id="password" placeholder="Hasło">
-            <button id="login-btn" class="btn-main" style="width:100%; margin-top:10px;">ZALOGUJ</button>
-            <button id="google-btn" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Kontynuuj z Google</button>
+            <button id="login-btn" class="btn-primary">ZALOGUJ</button>
+            <button id="google-btn" class="btn-link">Kontynuuj z Google</button>
         </div>
     </div>
 
     <div id="game-container" style="display:none;">
         <div id="map"></div>
         
-        <div class="ui-wrapper">
-            <div style="display:flex; justify-content: space-between; width: 100%;">
-                <div class="status-panel">
-                    <div style="display:flex; justify-content: space-between; align-items: center;">
-                        <b id="display-nick">OCALAŁY</b>
-                        <button id="logout-btn" style="background:none; border:none; color:#ff3e3e; font-size:10px;">EXIT</button>
-                    </div>
-                    <div class="hp-container"><div id="hp-bar"></div></div>
-                </div>
-
-                <div class="resource-panel">
-                    <div class="res-item"><span id="s-scrap">0</span><span>Złom</span></div>
-                    <div class="res-item"><span id="s-wood">0</span><span>Drewno</span></div>
-                    <div class="res-item"><span id="s-food">0</span><span>Jedzenie</span></div>
+        <div class="ui-overlay">
+            <div class="hud-top-left">
+                <div class="hp-panel">
+                    <span class="label">PUNKTY ŻYCIA</span>
+                    <div class="hp-bar-bg"><div id="hp-bar"></div></div>
                 </div>
             </div>
 
-            <div style="position: absolute; right: 20px; top: 150px; display:flex; flex-direction:column; gap:15px;">
-                <button id="btn-craft" class="btn-round" title="Crafting">⚒️</button>
-                <button id="btn-base" class="btn-round" title="Buduj Bazę">🏠</button>
+            <div class="hud-resources">
+                <div class="res-badge">⚙️ <span id="s-scrap">0</span></div>
+                <div class="res-badge">🪵 <span id="s-wood">0</span></div>
+                <div class="res-badge">🍎 <span id="s-food">0</span></div>
             </div>
 
-            <div id="msg" style="display:none;"></div>
+            <div class="hud-side">
+                <button id="btn-craft" class="btn-circle">⚒️</button>
+                <button id="btn-base" class="btn-circle">🏠</button>
+                <button id="logout-btn" class="btn-circle-small">🚪</button>
+            </div>
 
-            <div class="action-bar">
-                <button id="btn-eat" class="btn-round" style="border-color: var(--neon-green);">🍎</button>
-                <button id="btn-attack" class="btn-main">ATAKUJ</button>
+            <div class="hud-bottom">
+                <button id="btn-eat" class="btn-action-sec">🍎 ZJEDZ</button>
+                <button id="btn-attack" class="btn-action-main">ATAKUJ ZOMBIE</button>
             </div>
         </div>
     </div>
 
-    <div id="craft-modal" class="modal" style="display:none;">
-        <h2 style="color:var(--neon-green)">WARSZTAT</h2>
-        <p>Przetwórz 3x Drewno i 2x Złom na zapasy żywności.</p>
-        <button id="btn-craft-food" class="btn-main" style="background:var(--neon-green); color:#000;">PRODUKUJ 🍎</button>
-        <br><br>
-        <button id="btn-close-craft" style="background:none; border:none; color:#888;">ANULUJ</button>
+    <div id="craft-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h2>WARSZTAT</h2>
+            <p>Stwórz rację żywnościową:</p>
+            <p class="cost">Koszt: 3x 🪵 i 2x ⚙️</p>
+            <button id="btn-craft-food" class="btn-primary">WYTWÓRZ 🍎</button>
+            <button id="btn-close-craft" class="btn-link">ANULUJ</button>
+        </div>
     </div>
+
+    <div id="msg" class="notification" style="display:none;"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="script.js"></script>

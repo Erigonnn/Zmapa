@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { 
     apiKey: "AIzaSyBE3kWnpnQnlH1y8F5GF5Md_6vkfrxYVmc", 
@@ -16,17 +16,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// STAN GRY
 let state = JSON.parse(localStorage.getItem("zmapa_progress")) || { hp: 10, scrap: 0, wood: 0, food: 5, looted: {} };
-let map, player, rangeCircle;
-let zMarkers = []; 
-let existingBases = {}; 
-let lastScanPos = null;
+let map, player, rangeCircle, zMarkers = [], existingBases = {}, lastScanPos = null;
 
 // --- LOGOWANIE ---
 document.getElementById('login-btn').onclick = () => {
     const e = document.getElementById('email').value, p = document.getElementById('password').value;
-    signInWithEmailAndPassword(auth, e, p).catch(a => alert("Błąd: " + a.message));
+    signInWithEmailAndPassword(auth, e, p).catch(a => alert(a.message));
 };
 document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
 document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.reload());
@@ -42,7 +38,7 @@ onAuthStateChanged(auth, async u => {
     }
 });
 
-// --- INICJALIZACJA MAPY I GPS ---
+// --- MAPA I GPS ---
 function initGame() {
     if(map) return;
     map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.1388, 16.2731], 18);
@@ -59,23 +55,18 @@ function initGame() {
         player.setLatLng(ll);
         rangeCircle.setLatLng(ll);
         map.panTo(ll);
-        
-        if(zMarkers.length < 10) spawnZombie(ll);
+        if(zMarkers.length < 8) spawnZombie(ll);
         scanLoot(ll);
     }, null, { enableHighAccuracy: true });
 
     setInterval(gameTick, 1000);
 }
 
-// --- LOGIKA ZOMBIE (SZWENDANIE + POŚCIG) ---
-function getRandomOffset(loc, dist = 0.0015) {
-    return [loc[0] + (Math.random() - 0.5) * dist, loc[1] + (Math.random() - 0.5) * dist];
-}
-
+// --- LOGIKA ZOMBIE ---
 function spawnZombie(pos) {
-    const loc = getRandomOffset(pos, 0.008);
+    const loc = [pos[0] + (Math.random()-0.5)*0.01, pos[1] + (Math.random()-0.5)*0.01];
     const z = L.marker(loc, { icon: L.divIcon({ html: '💀', className: 'z-icon' }) }).addTo(map);
-    z.walkTarget = getRandomOffset(loc, 0.003); // Cel losowego szwendania
+    z.walkTarget = [loc[0] + (Math.random()-0.5)*0.003, loc[1] + (Math.random()-0.5)*0.003];
     zMarkers.push(z);
 }
 
@@ -84,75 +75,74 @@ function gameTick() {
     const pPos = player.getLatLng();
     let safe = false;
 
-    // Sprawdzanie bazy (leczenie)
+    // Leczenie w bazie
     Object.values(existingBases).forEach(b => {
         if(b.owner === auth.currentUser.uid && map.distance(pPos, [b.lat, b.lng]) < 30) {
-            safe = true; 
-            if(state.hp < 10) { state.hp = Math.min(10, state.hp + 0.15); updateUI(); }
+            safe = true; if(state.hp < 10) { state.hp = Math.min(10, state.hp + 0.1); updateUI(); }
         }
     });
 
     zMarkers.forEach(z => {
         const zPos = z.getLatLng();
-        const distToPlayer = map.distance(zPos, pPos);
-
-        if (distToPlayer < 45) {
-            // POŚCIG: Szybszy ruch w stronę gracza
-            const speed = 0.00025;
-            z.setLatLng([
-                zPos.lat + (pPos.lat > zPos.lat ? speed : -speed) * 0.5,
-                zPos.lng + (pPos.lng > zPos.lng ? speed : -speed) * 0.5
-            ]);
-            if (distToPlayer < 12 && !safe) {
-                state.hp = Math.max(0, state.hp - 0.3);
-                updateUI(true);
-            }
-        } else {
-            // SZWENDANIE: Powolny ruch do losowego celu
-            const target = z.walkTarget;
-            const distToTarget = map.distance(zPos, target);
-            if (distToTarget < 5) {
-                z.walkTarget = getRandomOffset([zPos.lat, zPos.lng], 0.003);
-            } else {
-                const speed = 0.00007;
-                z.setLatLng([
-                    zPos.lat + (target[0] > zPos.lat ? speed : -speed),
-                    zPos.lng + (target[1] > zPos.lng ? speed : -speed)
-                ]);
-            }
+        const dist = map.distance(zPos, pPos);
+        if (dist < 45) { // Pościg
+            const s = 0.0002;
+            z.setLatLng([zPos.lat + (pPos.lat > zPos.lat ? s : -s)*0.5, zPos.lng + (pPos.lng > zPos.lng ? s : -s)*0.5]);
+            if (dist < 12 && !safe) { state.hp = Math.max(0, state.hp - 0.3); updateUI(true); }
+        } else { // Szwendanie
+            const t = z.walkTarget;
+            const s = 0.00006;
+            if (map.distance(zPos, t) < 5) z.walkTarget = [zPos.lat + (Math.random()-0.5)*0.003, zPos.lng + (Math.random()-0.5)*0.003];
+            else z.setLatLng([zPos.lat + (t[0] > zPos.lat ? s : -s), zPos.lng + (t[1] > zPos.lng ? s : -s)]);
         }
     });
 }
 
-// --- SKANOWANIE OTOCZENIA (OVERPASS API) ---
+// --- ŁUPY (OSM) ---
 async function scanLoot(pos) {
     if(lastScanPos && map.distance(pos, lastScanPos) < 40) return;
     lastScanPos = pos;
-    fetch(`https://overpass-api.de/api/interpreter?data=[out:json];node(around:100,${pos[0]},${pos[1]})["shop"];out;`)
+    const q = `[out:json];(node["shop"](around:100,${pos[0]},${pos[1]});node["amenity"~"restaurant|cafe|pharmacy"](around:100,${pos[0]},${pos[1]}););out;`;
+    fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: q })
     .then(r => r.json()).then(d => {
         d.elements.forEach(el => {
             if(state.looted[el.id]) return;
-            const m = L.marker([el.lat, el.lon], { icon: L.divIcon({ html: '📦', className: 'poi-icon' }) }).addTo(map).on('click', () => {
+            const m = L.marker([el.lat, el.lon], { icon: L.divIcon({ html: '📦', className: 'poi-icon' }) }).addTo(map);
+            m.on('click', () => {
                 if(map.distance(player.getLatLng(), m.getLatLng()) < 40) {
                     map.removeLayer(m); state.looted[el.id] = true;
                     state.scrap += 2; state.wood += 2; updateUI(true);
-                    showMsg("ŁUP ZEBRANY! +2⚙️ +2🪵");
-                }
+                    showMsg("ZEBRANO ŁUP! +2⚙️ +2🪵");
+                } else showMsg("ZA DALEKO!");
             });
         });
     });
 }
 
-// --- AKCJE I UI ---
+// --- AKCJE GRACZA ---
 document.getElementById('btn-attack').onclick = () => {
+    const pPos = player.getLatLng();
+    let killed = false;
     zMarkers = zMarkers.filter(z => {
-        if(map.distance(player.getLatLng(), z.getLatLng()) < 40) {
-            map.removeLayer(z); state.scrap += 1; updateUI(true);
-            showMsg("ZABITO ZOMBIE! +1⚙️");
-            return false;
-        }
-        return true;
+        if(map.distance(pPos, z.getLatLng()) < 40) {
+            map.removeLayer(z); state.scrap += 1; killed = true; return false;
+        } return true;
     });
+    if(killed) { showMsg("ZABITO ZOMBIE!"); updateUI(true); }
+};
+
+document.getElementById('btn-eat').onclick = () => {
+    if(state.food > 0) { state.food--; state.hp = Math.min(10, state.hp + 3); updateUI(true); }
+    else showMsg("BRAK JEDZENIA!");
+};
+
+document.getElementById('btn-craft').onclick = () => document.getElementById('craft-modal').style.display = 'flex';
+document.getElementById('btn-close-craft').onclick = () => document.getElementById('craft-modal').style.display = 'none';
+document.getElementById('btn-craft-food').onclick = () => {
+    if(state.wood >= 3 && state.scrap >= 2) {
+        state.wood -= 3; state.scrap -= 2; state.food++; updateUI(true);
+        document.getElementById('craft-modal').style.display = 'none';
+    } else showMsg("BRAK MATERIAŁÓW!");
 };
 
 document.getElementById('btn-base').onclick = async () => {
@@ -164,17 +154,16 @@ document.getElementById('btn-base').onclick = async () => {
         await addDoc(collection(db, "bases"), { lat: p.lat, lng: p.lng, owner: auth.currentUser.uid });
         state.wood -= 10; state.scrap -= 5; updateUI(true);
         showMsg("BAZA WYBUDOWANA!");
-    } else showMsg("POTRZEBUJESZ 10🪵 i 5⚙️");
+    } else showMsg("BRAK MATERIAŁÓW!");
 };
 
 function listenToBases() {
     onSnapshot(collection(db, "bases"), snap => {
-        map.eachLayer(l => { if(l.options && (l.options.className === 'base-icon' || (l instanceof L.Circle && l !== rangeCircle))) map.removeLayer(l); });
-        existingBases = {};
+        map.eachLayer(l => { if(l.options && l.options.className === 'base-icon' || (l instanceof L.Circle && l !== rangeCircle)) map.removeLayer(l); });
         snap.forEach(d => {
             const b = d.data(); existingBases[d.id] = b;
             L.marker([b.lat, b.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
-            if(b.owner === auth.currentUser.uid) L.circle([b.lat, b.lng], { radius: 30, color: '#3eff8b', weight: 2, fillOpacity: 0.15 }).addTo(map);
+            if(b.owner === auth.currentUser.uid) L.circle([b.lat, b.lng], { radius: 30, color: '#4caf50', weight: 1 }).addTo(map);
         });
     });
 }
@@ -193,19 +182,5 @@ function showMsg(t) {
     const m = document.getElementById("msg"); m.innerText = t; m.style.display = "block";
     setTimeout(() => m.style.display = "none", 2500);
 }
-
-document.getElementById('btn-eat').onclick = () => {
-    if(state.food > 0) { state.food--; state.hp = Math.min(10, state.hp + 3); updateUI(true); } else showMsg("BRAK JEDZENIA!");
-};
-
-document.getElementById('btn-craft').onclick = () => document.getElementById('craft-modal').style.display = 'block';
-document.getElementById('btn-close-craft').onclick = () => document.getElementById('craft-modal').style.display = 'none';
-document.getElementById('btn-craft-food').onclick = () => {
-    if(state.wood >= 3 && state.scrap >= 2) {
-        state.wood -= 3; state.scrap -= 2; state.food++; updateUI(true);
-        document.getElementById('craft-modal').style.display = 'none';
-        showMsg("PRODUKCJA ZAKOŃCZONA!");
-    } else showMsg("BRAK MATERIAŁÓW!");
-};
 
 updateUI();
