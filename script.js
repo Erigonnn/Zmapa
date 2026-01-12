@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { 
@@ -14,60 +14,38 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
 
 let state = JSON.parse(localStorage.getItem("zmapa_progress")) || { hp: 10, scrap: 0, wood: 0, food: 5, looted: {} };
 let map, player, rangeCircle, zMarkers = [];
-let existingBases = {}; 
+let existingBases = {}; // Zmienione na obiekt, by łatwiej usuwać
 let lastScanPos = null;
 const MAX_ZOMBIES = 12;
-
-// --- AUTH LOGIC ---
-document.getElementById('login-btn').onclick = () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    if(!email || !pass) return alert("Wpisz dane!");
-    signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Błąd: " + err.message));
-};
-
-document.getElementById('register-btn').onclick = () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    createUserWithEmailAndPassword(auth, email, pass)
-        .then(u => setDoc(doc(db, "users", u.user.uid), state))
-        .catch(err => alert("Błąd: " + err.message));
-};
-
-document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
-
-document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, async (u) => {
     if (u) {
         const s = await getDoc(doc(db, "users", u.uid));
-        if (s.exists()) { state = { ...state, ...s.data() }; }
+        if (s.exists()) { state = { ...state, ...s.data() }; saveLocal(); }
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         initGame();
         listenToBases();
-    } else {
-        document.getElementById('landing-page').style.display = 'flex';
-        document.getElementById('game-container').style.display = 'none';
     }
 });
 
-// --- GAME CORE ---
 function initGame() {
-    if (map) return;
     map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.1388, 16.2731], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     player = L.marker([52.1388, 16.2731], { 
-        icon: L.divIcon({ html: '<div class="player-arrow"></div>', className: 'p-wrap' }) 
+        icon: L.divIcon({ html: '<div id="p-arrow" class="player-arrow"></div>', className: 'p-wrap' }) 
     }).addTo(map);
 
+    // OKRĄG ZASIĘGU GRACZA (40m)
     rangeCircle = L.circle([52.1388, 16.2731], {
-        radius: 40, color: '#3388ff', fillOpacity: 0.1, weight: 1
+        radius: 40,
+        color: '#3388ff',
+        fillOpacity: 0.1,
+        weight: 1
     }).addTo(map);
 
     navigator.geolocation.watchPosition(pos => {
@@ -79,20 +57,25 @@ function initGame() {
         scanLoot(ll);
     }, null, { enableHighAccuracy: true });
 
-    setInterval(gameTick, 1000);
+    setInterval(gameTick, 1500);
 }
 
+// GŁÓWNA PĘTLA GRY (ZOMBIE + REGENERACJA)
 function gameTick() {
-    if(!player || !auth.currentUser) return;
+    if(!player) return;
     const pPos = player.getLatLng();
     let inSafeZone = false;
 
+    // Sprawdzanie czy gracz jest w swojej bazie
     Object.values(existingBases).forEach(b => {
         if (b.owner === auth.currentUser.uid) {
-            const dist = map.distance(pPos, [b.lat, b.lng]);
-            if (dist < 30) {
+            const distToBase = map.distance(pPos, [b.lat, b.lng]);
+            if (distToBase < 30) { // Zasięg bazy 30m
                 inSafeZone = true;
-                if (state.hp < 10) { state.hp = Math.min(10, state.hp + 0.1); updateUI(); }
+                if (state.hp < 10) {
+                    state.hp = Math.min(10, state.hp + 0.2); // Regeneracja HP
+                    updateUI();
+                }
             }
         }
     });
@@ -100,53 +83,83 @@ function gameTick() {
     zMarkers.forEach(z => {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
+        
         if (dist < 45) {
-            const speed = 0.00025;
+            const speed = 0.00022;
             z.setLatLng([zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)]);
         }
+
+        // Atakuje tylko jeśli gracz NIE jest w strefie bezpiecznej
         if (dist < 12 && !inSafeZone) { 
-            state.hp = Math.max(0, state.hp - 0.4); 
+            state.hp = Math.max(0, state.hp - 0.7); 
             updateUI(true); 
-            showMsg("ZOMBI CIĘ GRYZIE!");
+            showMsg("ZOMBIE ATAKUJE!"); 
+        } else if (dist < 12 && inSafeZone) {
+            showMsg("STREFA BEZPIECZNA!");
         }
     });
 }
 
-// --- ACTIONS ---
+// --- BUDOWANIE (LIMIT 1 BAZY) ---
 document.getElementById('btn-base').onclick = async () => {
     if (state.wood >= 10 && state.scrap >= 5) {
         const p = player.getLatLng();
+        
+        // 1. Usuń starą bazę z Firebase
         const q = query(collection(db, "bases"), where("owner", "==", auth.currentUser.uid));
         const oldBases = await getDocs(q);
-        for (const d of oldBases.docs) { await deleteDoc(doc(db, "bases", d.id)); }
-        await addDoc(collection(db, "bases"), { lat: p.lat, lng: p.lng, owner: auth.currentUser.uid });
+        oldBases.forEach(async (d) => {
+            await deleteDoc(doc(db, "bases", d.id));
+        });
+
+        // 2. Dodaj nową bazę
+        await addDoc(collection(db, "bases"), { 
+            lat: p.lat, 
+            lng: p.lng, 
+            owner: auth.currentUser.uid 
+        });
+
         state.wood -= 10; state.scrap -= 5;
         updateUI(true);
-        showMsg("BAZA WYBUDOWANA!");
+        showMsg("PRZENIESIONO BAZĘ!");
     } else showMsg("POTRZEBA 10🪵 I 5⚙️");
 };
 
 function listenToBases() {
     onSnapshot(collection(db, "bases"), (snap) => {
+        // Czyścimy bazy na mapie przy każdej zmianie (uproszczenie dla limitu 1 bazy)
         map.eachLayer(layer => {
-            if ((layer instanceof L.Circle && layer !== rangeCircle) || (layer instanceof L.Marker && layer !== player && !zMarkers.includes(layer) && !layer.options.isLoot)) {
-                map.removeLayer(layer);
-            }
+            if (layer.options && layer.options.isBaseLayer) map.removeLayer(layer);
         });
         existingBases = {};
-        snap.forEach(docSnap => {
-            const b = docSnap.data();
-            existingBases[docSnap.id] = b;
-            L.marker([b.lat, b.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
+
+        snap.forEach(doc => {
+            const b = doc.data();
+            existingBases[doc.id] = b;
+            
+            // Rysowanie bazy
+            L.marker([b.lat, b.lng], { 
+                icon: L.divIcon({ html: '🏠', className: 'base-icon' }),
+                isBaseLayer: true 
+            }).addTo(map);
+
+            // Jeśli to baza gracza, narysuj zielony okrąg bezpieczeństwa
             if (b.owner === auth.currentUser.uid) {
-                L.circle([b.lat, b.lng], { radius: 30, color: '#2ecc71', fillOpacity: 0.15, weight: 2 }).addTo(map);
+                L.circle([b.lat, b.lng], {
+                    radius: 30,
+                    color: '#2ecc71',
+                    fillOpacity: 0.2,
+                    weight: 2,
+                    isBaseLayer: true
+                }).addTo(map);
             }
         });
     });
 }
 
+// --- RESZTA FUNKCJI (ZOMBIE SPAWN, LOOT, UI) BEZ ZMIAN ---
 function spawnZombie(pos) {
-    const loc = [pos[0] + (Math.random() - 0.5) * 0.006, pos[1] + (Math.random() - 0.5) * 0.006];
+    const loc = [pos[0] + (Math.random() - 0.5) * 0.005, pos[1] + (Math.random() - 0.5) * 0.005];
     const z = L.marker(loc, { icon: L.divIcon({ html: '💀', className: 'z-icon' }) }).addTo(map);
     zMarkers.push(z);
 }
@@ -162,13 +175,12 @@ async function scanLoot(pos) {
             const lat = el.lat || el.center.lat;
             const lon = el.lon || el.center.lon;
             if (state.looted[id]) return;
-            const m = L.marker([lat, lon], { icon: L.divIcon({ html: '📦', className: 'poi-icon' }), isLoot: true }).addTo(map).on('click', () => {
+            const m = L.marker([lat, lon], { icon: L.divIcon({ html: '📦', className: 'poi-icon' }) }).addTo(map).on('click', () => {
                 if (map.distance(player.getLatLng(), m.getLatLng()) < 40) {
                     map.removeLayer(m);
                     state.looted[id] = true;
                     state.scrap += 2; state.wood += 2;
                     updateUI(true);
-                    showMsg("ŁUP ZEBRANY! +2⚙️ +2🪵");
                 }
             });
         });
@@ -181,7 +193,7 @@ document.getElementById('btn-attack').onclick = () => {
         if(map.distance(pPos, z.getLatLng()) < 40) {
             map.removeLayer(z);
             state.scrap += 1; updateUI(true);
-            showMsg("ZOMBI POKONANY! +1⚙️");
+            showMsg("POKONANO ZOMBIE!");
             return false;
         }
         return true;
@@ -192,19 +204,18 @@ document.getElementById('btn-eat').onclick = () => {
     if(state.food > 0) {
         state.food--; state.hp = Math.min(10, state.hp + 3);
         updateUI(true);
-        showMsg("POSIŁEK ZJEDZONY 🍎");
-    } else showMsg("BRAK JEDZENIA!");
+    }
 };
 
 function updateUI(saveCloud = false) {
     document.getElementById('hp-bar').style.width = (state.hp * 10) + "%";
-    document.getElementById('s-scrap').innerText = Math.floor(state.scrap);
-    document.getElementById('s-wood').innerText = Math.floor(state.wood);
+    document.getElementById('s-scrap').innerText = state.scrap;
+    document.getElementById('s-wood').innerText = state.wood;
     document.getElementById('s-food').innerText = state.food;
     localStorage.setItem("zmapa_progress", JSON.stringify(state));
     if(saveCloud && auth.currentUser) updateDoc(doc(db, "users", auth.currentUser.uid), state);
     if(state.hp <= 0) {
-        alert("ZGINĄŁEŚ! TRACISZ ZAPASY.");
+        alert("ZGINĄŁEŚ!");
         state = { hp: 10, scrap: 0, wood: 0, food: 2, looted: {} };
         updateUI(true); location.reload();
     }
@@ -216,7 +227,6 @@ function showMsg(t) {
     setTimeout(() => m.style.display = "none", 2000);
 }
 
-// Crafting
 const craftModal = document.getElementById('craft-modal');
 document.getElementById('btn-craft').onclick = () => craftModal.style.display = 'block';
 document.getElementById('btn-close-craft').onclick = () => craftModal.style.display = 'none';
@@ -224,8 +234,7 @@ document.getElementById('btn-craft-food').onclick = () => {
     if (state.wood >= 3 && state.scrap >= 2) {
         state.wood -= 3; state.scrap -= 2; state.food++;
         updateUI(true);
-        showMsg("PROWIANT GOTOWY!");
-    } else { showMsg("BRAK MATERIAŁÓW!"); }
+    }
 };
 
 updateUI();
