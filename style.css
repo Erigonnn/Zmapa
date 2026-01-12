@@ -2,45 +2,49 @@
     --neon-green: #0f0;
     --blood-red: #ff3333;
     --dark-bg: #0a0a0a;
-    --panel-bg: rgba(0, 15, 0, 0.9);
 }
 
-body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; color: #fff; overflow: hidden; }
+body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; color: #fff; overflow: hidden; touch-action: none; }
 
-/* LANDING PAGE */
 #landing-page { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: #000; }
 .landing-bg { position: absolute; inset: 0; background: radial-gradient(circle, #1a0a0a 0%, #000 80%); }
 .content-box { width: 90%; max-width: 400px; text-align: center; position: relative; z-index: 2; }
 
-.glitch { font-size: 3.5rem; color: #fff; text-shadow: 3px 3px var(--blood-red); margin: 0; animation: glitch 1s infinite alternate; }
-.subtitle { color: var(--neon-green); letter-spacing: 2px; margin-bottom: 25px; border-bottom: 1px solid var(--neon-green); display: inline-block; padding-bottom: 5px; }
+.glitch { font-size: 3.5rem; color: #fff; text-shadow: 3px 3px var(--blood-red); margin: 0; }
+.subtitle { color: var(--neon-green); letter-spacing: 2px; margin-bottom: 25px; }
 
-.features-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 25px; }
-.feature { background: rgba(0, 255, 0, 0.05); padding: 10px; border: 1px solid #222; }
-.feature h3 { font-size: 0.9rem; color: var(--neon-green); margin: 0; }
-.feature p { font-size: 0.7rem; color: #888; margin: 5px 0 0; }
+.btn-main { background: var(--blood-red); color: white; border: none; padding: 18px; width: 100%; font-size: 1.1rem; cursor: pointer; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); font-family: inherit; }
 
-.auth-panel input { width: 100%; padding: 12px; margin: 5px 0; background: #050505; border: 1px solid #004400; color: var(--neon-green); font-family: inherit; box-sizing: border-box; }
-.btn-main { background: var(--blood-red); color: white; border: none; padding: 15px; width: 100%; font-size: 1.1rem; cursor: pointer; margin-top: 10px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
-.btn-google { background: transparent; border: 1px solid #444; color: #aaa; width: 100%; padding: 10px; margin-top: 10px; cursor: pointer; font-family: inherit; }
+#map { position: absolute; inset: 0; filter: grayscale(1) brightness(0.3) contrast(1.2); }
+.hud-panel { background: rgba(0, 15, 0, 0.85); border: 1px solid var(--neon-green); padding: 10px; position: absolute; z-index: 1000; }
+.top-left { top: 15px; left: 15px; border-radius: 0 10px 0 0; }
+.top-right { top: 15px; right: 15px; text-align: right; }
 
-/* HUD */
-#map { position: absolute; inset: 0; filter: grayscale(1) brightness(0.3) contrast(1.1); }
-.hud-panel { background: var(--panel-bg); border: 1px solid var(--neon-green); padding: 10px; position: absolute; pointer-events: auto; }
-.top-left { top: 15px; left: 15px; border-radius: 0 15px 0 0; }
-.top-right { top: 15px; right: 15px; text-align: right; border-radius: 15px 0 0 0; }
-.hp-track { width: 100px; height: 8px; background: #222; margin-top: 5px; }
-#hp-bar { height: 100%; background: var(--blood-red); box-shadow: 0 0 10px var(--blood-red); }
+.hp-track { width: 120px; height: 10px; background: #222; margin-top: 5px; border: 1px solid #444; }
+#hp-bar { height: 100%; background: var(--blood-red); box-shadow: 0 0 10px var(--blood-red); transition: width 0.3s; }
 
-.hud-side-buttons { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
-.circle-btn { width: 50px; height: 50px; border-radius: 50%; background: #000; border: 2px solid var(--neon-green); color: var(--neon-green); font-size: 1.5rem; cursor: pointer; }
-.circle-btn.gold { border-color: gold; color: gold; }
+.hud-side-buttons { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
+.circle-btn { width: 60px; height: 60px; border-radius: 50%; background: #000; border: 2px solid var(--neon-green); color: var(--neon-green); font-size: 1.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+.circle-btn.gold { border-color: #ffd700; color: #ffd700; }
+.circle-btn.small { width: 40px; height: 40px; font-size: 1rem; border-color: #555; color: #555; }
 
-.hud-bottom { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 10px; pointer-events: auto; }
-.action-btn { padding: 15px 20px; border: none; font-family: inherit; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
+.hud-bottom { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
+.action-btn { padding: 16px 24px; border: none; font-family: inherit; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
 .action-btn.red { background: var(--blood-red); color: white; }
 .action-btn.green { background: #003300; color: var(--neon-green); border: 1px solid var(--neon-green); }
 
-.player-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid #00f2ff; filter: drop-shadow(0 0 8px #00f2ff); }
-.toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 10px 20px; font-weight: bold; z-index: 10000; }
-@keyframes glitch { 0% { text-shadow: 2px 2px red; } 100% { text-shadow: -2px -2px blue; } }
+/* Rotująca strzałka gracza */
+.player-arrow-icon { 
+    width: 0; height: 0; 
+    border-left: 12px solid transparent; 
+    border-right: 12px solid transparent; 
+    border-bottom: 24px solid #00f2ff; 
+    filter: drop-shadow(0 0 8px #00f2ff);
+    transition: transform 0.1s linear;
+}
+
+.loot-icon { font-size: 30px; filter: drop-shadow(0 0 5px gold); animation: pulse 1.5s infinite; }
+.zombie-icon { font-size: 30px; filter: drop-shadow(0 0 8px red); transition: all 0.5s linear; }
+
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: #000; padding: 12px 24px; font-weight: bold; z-index: 10000; border-radius: 5px; }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA: STREFA ZERO</title>
+    <title>Z-MAPA: PROJEKT ZERO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -14,30 +14,10 @@
         <div class="landing-bg"></div>
         <div class="content-box">
             <h1 class="glitch" data-text="Z-MAPA">Z-MAPA</h1>
-            <p class="subtitle">REAL WORLD SURVIVAL MMO</p>
-
-            <div class="features-grid">
-                <div class="feature">
-                    <h3>📍 GPS</h3>
-                    <p>Twoja ulica to pole bitwy.</p>
-                </div>
-                <div class="feature">
-                    <h3>🧟 HORDY</h3>
-                    <p>Zombie tropią Twój sygnał.</p>
-                </div>
-                <div class="feature">
-                    <h3>📦 ŁUPY</h3>
-                    <p>Skanuj teren po zapasy.</p>
-                </div>
-            </div>
-
+            <p class="subtitle">SYSTEM PRZETRWANIA RZECZYWISTEGO</p>
             <div class="auth-panel">
-                <input type="email" id="email" placeholder="IDENTYFIKATOR (EMAIL)">
-                <input type="password" id="password" placeholder="KOD DOSTĘPU">
-                <button id="login-btn" class="btn-main">AKTYWUJ SYSTEM</button>
-                <button id="google-btn" class="btn-google">LOGOWANIE GOOGLE ID</button>
+                <button id="google-btn" class="btn-main pulse">AKTYWUJ SYSTEM (GOOGLE)</button>
             </div>
-            <p class="footer-note">AUTORYZACJA WYMAGANA DO SKANOWANIA GPS</p>
         </div>
     </div>
 
@@ -45,7 +25,7 @@
         <div id="map"></div>
         <div class="ui-overlay">
             <div class="hud-panel top-left">
-                <div class="player-label">BIOMETRIA</div>
+                <div class="player-label">STATUS ŻYCIOWY</div>
                 <div class="hp-track"><div id="hp-bar"></div></div>
             </div>
             <div class="hud-panel top-right">
@@ -54,14 +34,13 @@
                 <div class="res-item">🍎 <span id="s-food" class="val">0</span></div>
             </div>
             <div class="hud-side-buttons">
-                <button id="btn-scan" class="circle-btn gold">📡</button>
+                <button id="btn-scan" class="circle-btn gold" title="Skanuj teren">📡</button>
                 <button id="btn-craft" class="circle-btn">⚒️</button>
-                <button id="btn-base" class="circle-btn">🏠</button>
                 <button id="logout-btn" class="circle-btn small">✕</button>
             </div>
             <div class="hud-bottom">
                 <button id="btn-eat" class="action-btn green">🍎 ZJEDZ</button>
-                <button id="btn-attack" class="action-btn red">ELIMINUJ CEL</button>
+                <button id="btn-attack" class="action-btn red">ELIMINUJ ZAGROŻENIE</button>
             </div>
         </div>
     </div>
