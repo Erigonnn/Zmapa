@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { 
     apiKey: "AIzaSyBE3kWnpnQnlH1y8F5GF5Md_6vkfrxYVmc", 
@@ -16,10 +16,12 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-let state = { hp: 10, scrap: 0, wood: 0, food: 5, looted: {} };
+// --- STAN GRY (ZAPIS LOKALNY + SYNCHRONIZACJA) ---
+let state = JSON.parse(localStorage.getItem("zmapa_progress")) || { hp: 10, scrap: 0, wood: 0, food: 5, looted: {} };
 let map, player, zMarkers = [];
 let lastScanPos = null;
-const MAX_ZOMBIES = 20;
+let existingBases = new Set();
+const MAX_ZOMBIES = 15;
 
 // --- LOGOWANIE ---
 document.getElementById('login-btn').onclick = () => {
@@ -29,22 +31,31 @@ document.getElementById('login-btn').onclick = () => {
 
 document.getElementById('register-btn').onclick = () => {
     createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
-    .then(u => setDoc(doc(db, "users", u.user.uid), state))
+    .then(u => {
+        setDoc(doc(db, "users", u.user.uid), state);
+        showMsg("KONTO UTWORZONE!");
+    })
     .catch(err => alert("Błąd: " + err.message));
 };
 
 document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
-
-document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.reload());
+document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => {
+    localStorage.removeItem("zmapa_progress");
+    location.reload();
+});
 
 onAuthStateChanged(auth, async (u) => {
     if (u) {
+        // Próba wczytania zapisu z chmury przy pierwszym logowaniu
         const s = await getDoc(doc(db, "users", u.uid));
-        if (s.exists()) Object.assign(state, s.data());
+        if (s.exists()) {
+            state = { ...state, ...s.data() };
+            saveLocal();
+        }
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         initGame();
-        loadBases(); // Ładowanie baz po zalogowaniu
+        listenToBases(); // Globalne bazy w czasie rzeczywistym
     }
 });
 
@@ -68,41 +79,62 @@ function initGame() {
     if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientationabsolute', e => {
             let heading = e.alpha || e.webkitCompassHeading;
-            if (heading) document.getElementById('p-arrow').style.transform = `rotate(${-heading}deg)`;
+            if (heading) {
+                const arrow = document.getElementById('p-arrow');
+                if(arrow) arrow.style.transform = `rotate(${-heading}deg)`;
+            }
         }, true);
     }
-    setInterval(updateZombies, 1000);
+    setInterval(updateZombies, 1500);
 }
 
-// --- ZOMBIE (BEZ ZMIAN) ---
+// --- ZOMBIE & WALKA ---
 function updateZombies() {
     if(!player) return;
     const pPos = player.getLatLng();
     zMarkers.forEach(z => {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
-        if (dist < 50) {
-            const speed = 0.0002;
-            z.setLatLng([zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)]);
-        } else {
-            const drift = 0.0001;
-            z.setLatLng([zPos.lat + (Math.random() - 0.5) * drift, zPos.lng + (Math.random() - 0.5) * drift]);
+        
+        const speed = 0.00015;
+        z.setLatLng([
+            zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), 
+            zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)
+        ]);
+
+        if (dist < 12) { 
+            state.hp = Math.max(0, state.hp - 0.5); 
+            updateUI(true); 
+            showMsg("ZOMBIE ATAKUJE!");
         }
-        if (dist < 10) { state.hp = Math.max(0, state.hp - 0.2); updateUI(true); }
     });
 }
 
 function spawnZombie(pos) {
-    const loc = [pos[0] + (Math.random() - 0.5) * 0.008, pos[1] + (Math.random() - 0.5) * 0.008];
+    const loc = [pos[0] + (Math.random() - 0.5) * 0.006, pos[1] + (Math.random() - 0.5) * 0.006];
     const z = L.marker(loc, { icon: L.divIcon({ html: '💀', className: 'z-icon' }) }).addTo(map);
     zMarkers.push(z);
 }
 
-// --- LOOT (BEZ ZMIAN) ---
+document.getElementById('btn-attack').onclick = () => {
+    const pPos = player.getLatLng();
+    zMarkers = zMarkers.filter(z => {
+        if(map.distance(pPos, z.getLatLng()) < 40) {
+            map.removeLayer(z);
+            state.scrap += 1;
+            updateUI(true);
+            showMsg("ZABITO ZOMBI! +1⚙️");
+            return false;
+        }
+        return true;
+    });
+};
+
+// --- LOOT ---
 async function scanLoot(pos) {
-    if (lastScanPos && map.distance(pos, lastScanPos) < 50) return;
+    if (lastScanPos && map.distance(pos, lastScanPos) < 40) return;
     lastScanPos = pos;
-    const q = `[out:json];way["building"](around:100,${pos[0]},${pos[1]});out center 5;`;
+    const q = `[out:json];way["building"](around:80,${pos[0]},${pos[1]});out center 5;`;
     fetch('https://overpass-api.de/api/interpreter', { method: 'POST', body: q })
     .then(r => r.json()).then(data => {
         data.elements.forEach(el => {
@@ -112,72 +144,86 @@ async function scanLoot(pos) {
                     map.removeLayer(this);
                     state.looted[el.id] = true;
                     state.scrap += 2; state.wood += 2;
-                    updateUI(true); showMsg("ŁUP ZEBRANY!");
+                    updateUI(true); showMsg("ŁUP ZEBRANY! +2🪵 +2⚙️");
                 }
             });
         });
     });
 }
 
-// --- AKCJE I UI ---
-document.getElementById('btn-attack').onclick = () => {
-    const pPos = player.getLatLng();
-    zMarkers = zMarkers.filter(z => {
-        if(map.distance(pPos, z.getLatLng()) < 35) {
-            map.removeLayer(z);
-            showMsg("ZABITO ZOMBI!");
-            return false;
-        }
-        return true;
-    });
+// --- BAZY (FIREBASE GLOBAL) ---
+document.getElementById('btn-base').onclick = async () => {
+    if (state.wood >= 10 && state.scrap >= 5) {
+        const p = player.getLatLng();
+        try {
+            await addDoc(collection(db, "bases"), { 
+                lat: p.lat, 
+                lng: p.lng, 
+                owner: auth.currentUser.uid,
+                timestamp: Date.now()
+            });
+            state.wood -= 10; state.scrap -= 5;
+            updateUI(true);
+            showMsg("BAZA POSTAWIONA!");
+        } catch(e) { showMsg("BŁĄD ZAPISU!"); }
+    } else showMsg("POTRZEBA 10🪵 I 5⚙️");
 };
 
+function listenToBases() {
+    onSnapshot(collection(db, "bases"), (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+                const docId = change.doc.id;
+                const b = change.doc.data();
+                if (!existingBases.has(docId)) {
+                    L.marker([b.lat, b.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
+                    existingBases.add(docId);
+                }
+            }
+        });
+    });
+}
+
+// --- UI I SYSTEMY ---
 document.getElementById('btn-eat').onclick = () => {
     if(state.food > 0) {
         state.food--; state.hp = Math.min(10, state.hp + 3);
         updateUI(true);
-    }
+        showMsg("ZJEDZONO POSIŁEK 🍎");
+    } else showMsg("BRAK JEDZENIA!");
 };
 
-// NOWE: CRAFTING
-document.getElementById('btn-craft').onclick = () => document.getElementById('craft-modal').style.display = 'block';
-document.getElementById('btn-close-craft').onclick = () => document.getElementById('craft-modal').style.display = 'none';
-document.getElementById('btn-craft-food').onclick = () => {
-    if (state.wood >= 3 && state.scrap >= 2) {
-        state.wood -= 3; state.scrap -= 2; state.food++;
-        updateUI(true); showMsg("GOTOWE! 🍎");
-    } else showMsg("BRAK MATERIAŁÓW!");
-};
-
-// NOWE: BUDOWANIE BAZY
-document.getElementById('btn-base').onclick = async () => {
-    if (state.wood >= 10 && state.scrap >= 5) {
-        const p = player.getLatLng();
-        await addDoc(collection(db, "bases"), { lat: p.lat, lng: p.lng, owner: auth.currentUser.uid });
-        state.wood -= 10; state.scrap -= 5;
-        updateUI(true);
-        L.marker([p.lat, p.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
-        showMsg("BAZA POSTAWIONA!");
-    } else showMsg("POTRZEBA 10🪵 I 5⚙️");
-};
-
-async function loadBases() {
-    const s = await getDocs(collection(db, "bases"));
-    s.forEach(d => {
-        L.marker([d.data().lat, d.data().lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
-    });
-}
-
-function updateUI(save = false) {
+function updateUI(saveToCloud = false) {
     document.getElementById('hp-bar').style.width = (state.hp * 10) + "%";
     document.getElementById('s-scrap').innerText = state.scrap;
     document.getElementById('s-wood').innerText = state.wood;
     document.getElementById('s-food').innerText = state.food;
-    if(save && auth.currentUser) updateDoc(doc(db, "users", auth.currentUser.uid), state);
-    if(state.hp <= 0) { alert("KONIEC GRY!"); state.hp = 10; updateUI(true); location.reload(); }
+    
+    saveLocal(); // Zawsze zapisuj lokalnie
+
+    if(saveToCloud && auth.currentUser) {
+        updateDoc(doc(db, "users", auth.currentUser.uid), state).catch(() => {});
+    }
+
+    if(state.hp <= 0) { 
+        alert("ZGINĄŁEŚ!"); 
+        state.hp = 10; 
+        updateUI(true); 
+        location.reload(); 
+    }
+}
+
+function saveLocal() {
+    localStorage.setItem("zmapa_progress", JSON.stringify(state));
 }
 
 function showMsg(t) {
-    const m = document.getElementById("msg"); m.innerText = t; m.style.display = "block";
-    setTimeout(() => m.style.display = "none", 2000);
+    const m = document.getElementById("msg"); 
+    if(m) {
+        m.innerText = t; m.style.display = "block";
+        setTimeout(() => m.style.display = "none", 2500);
+    }
 }
+
+// Inicjalizacja UI przy starcie
+updateUI();
