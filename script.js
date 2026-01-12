@@ -18,7 +18,7 @@ const provider = new GoogleAuthProvider();
 
 let state = { hp: 10, scrap: 0, wood: 0, food: 3 };
 let map, playerMarker, lastSpawnPos = null;
-let zMarkers = [], lootMarkers = [];
+let zMarkers = [];
 
 document.getElementById('google-btn').onclick = () => signInWithRedirect(auth, provider);
 
@@ -45,44 +45,42 @@ function initGame() {
     });
     playerMarker = L.marker([0, 0], { icon: arrow }).addTo(map);
 
-    // OBRÓT STRZAŁKI (KOMPAS)
+    // KOMPAS
     window.addEventListener('deviceorientationabsolute', (e) => {
         let heading = e.webkitCompassHeading || (360 - e.alpha);
         const el = document.getElementById('user-arrow');
         if (el && heading) el.style.transform = `rotate(${heading}deg)`;
     }, true);
 
-    // GPS I AUTOMATYCZNE GENEROWANIE
+    // GPS + AUTOMATYCZNY SPAWN CO 30 METRÓW
     navigator.geolocation.watchPosition(pos => {
         const p = [pos.coords.latitude, pos.coords.longitude];
         playerMarker.setLatLng(p);
         map.panTo(p);
 
-        // Jeśli przeszedłeś 30 metrów od ostatniego punktu, generuj zasoby
         if (!lastSpawnPos || map.distance(p, lastSpawnPos) > 30) {
             lastSpawnPos = p;
-            spawnNewWave(p);
+            spawnAround(p);
         }
     }, null, { enableHighAccuracy: true });
 
     setInterval(gameLoop, 1000);
 }
 
-function spawnNewWave(p) {
-    // Generuj 4 paczki i 2 zombie w promieniu gracza
+function spawnAround(p) {
     for(let i=0; i<4; i++) {
         const off = () => (Math.random() - 0.5) * 0.0035;
         const loot = L.marker([p[0]+off(), p[1]+off()], { icon: L.divIcon({ html: '📦', className: 'loot-icon' }) }).addTo(map);
         
         loot.on('click', () => {
-            if(map.distance(playerMarker.getLatLng(), loot.getLatLng()) < 40) {
+            if(map.distance(playerMarker.getLatLng(), loot.getLatLng()) < 45) {
                 map.removeLayer(loot);
                 state.scrap += 5; state.wood += 2;
                 showMsg("+5⚙️ +2🪵"); updateUI(true);
             } else showMsg("ZA DALEKO!");
         });
 
-        if(i < 2) { // 2 zombie na każdą falę
+        if(i < 2) {
             const z = L.marker([p[0]+off(), p[1]+off()], { icon: L.divIcon({ html: '🧟', className: 'zombie-icon' }) }).addTo(map);
             zMarkers.push(z);
         }
@@ -97,22 +95,15 @@ function gameLoop() {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
         
-        if(dist < 100) { // ŚLEDZENIE
+        if(dist < 100) { // GONITWA
             const step = 0.00007;
             z.setLatLng([
                 zPos.lat + (pPos.lat > zPos.lat ? step : -step),
                 zPos.lng + (pPos.lng > zPos.lng ? step : -step)
             ]);
-            if(dist < 12) { 
-                state.hp -= 0.15; updateUI(); 
-                if(Math.random() > 0.8) showMsg("⚠️ ATAK ZOMBIE!");
-            }
+            if(dist < 12) { state.hp -= 0.15; updateUI(); }
         } else { // WAŁĘSANIE SIĘ
-            const wander = 0.00002;
-            z.setLatLng([
-                zPos.lat + (Math.random()-0.5) * wander,
-                zPos.lng + (Math.random()-0.5) * wander
-            ]);
+            z.setLatLng([zPos.lat + (Math.random()-0.5)*0.00002, zPos.lng + (Math.random()-0.5)*0.00002]);
         }
     });
 }
@@ -127,13 +118,6 @@ document.getElementById('btn-attack').onclick = () => {
         }
         return true;
     });
-};
-
-document.getElementById('btn-eat').onclick = () => {
-    if(state.food > 0) {
-        state.food--; state.hp = Math.min(10, state.hp + 4);
-        updateUI(true); showMsg("REGENERACJA...");
-    }
 };
 
 function updateUI(cloud = false) {
