@@ -16,7 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// --- STAN GRY (ZAPIS LOKALNY + SYNCHRONIZACJA) ---
+// --- STAN GRY ---
 let state = JSON.parse(localStorage.getItem("zmapa_progress")) || { hp: 10, scrap: 0, wood: 0, food: 5, looted: {} };
 let map, player, zMarkers = [];
 let lastScanPos = null;
@@ -25,12 +25,15 @@ const MAX_ZOMBIES = 15;
 
 // --- LOGOWANIE ---
 document.getElementById('login-btn').onclick = () => {
-    signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
-    .catch(err => alert("Błąd: " + err.message));
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Błąd: " + err.message));
 };
 
 document.getElementById('register-btn').onclick = () => {
-    createUserWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    createUserWithEmailAndPassword(auth, e, p)
     .then(u => {
         setDoc(doc(db, "users", u.user.uid), state);
         showMsg("KONTO UTWORZONE!");
@@ -46,7 +49,6 @@ document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => {
 
 onAuthStateChanged(auth, async (u) => {
     if (u) {
-        // Próba wczytania zapisu z chmury przy pierwszym logowaniu
         const s = await getDoc(doc(db, "users", u.uid));
         if (s.exists()) {
             state = { ...state, ...s.data() };
@@ -55,7 +57,7 @@ onAuthStateChanged(auth, async (u) => {
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         initGame();
-        listenToBases(); // Globalne bazy w czasie rzeczywistym
+        listenToBases();
     }
 });
 
@@ -88,24 +90,33 @@ function initGame() {
     setInterval(updateZombies, 1500);
 }
 
-// --- ZOMBIE & WALKA ---
+// --- POPRAWIONE ZOMBIE (LOGIKA DYSTANSU) ---
 function updateZombies() {
     if(!player) return;
     const pPos = player.getLatLng();
+    
     zMarkers.forEach(z => {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
         
-        const speed = 0.00015;
-        z.setLatLng([
-            zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), 
-            zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)
-        ]);
+        if (dist < 60) { // Zauważają gracza z 60 metrów
+            const speed = 0.00018; 
+            z.setLatLng([
+                zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), 
+                zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)
+            ]);
+        } else { // Spacerują losowo, gdy gracz jest daleko
+            const drift = 0.00005;
+            z.setLatLng([
+                zPos.lat + (Math.random() - 0.5) * drift, 
+                zPos.lng + (Math.random() - 0.5) * drift
+            ]);
+        }
 
-        if (dist < 12) { 
-            state.hp = Math.max(0, state.hp - 0.5); 
+        if (dist < 12) { // Atak
+            state.hp = Math.max(0, state.hp - 0.4); 
             updateUI(true); 
-            showMsg("ZOMBIE ATAKUJE!");
+            showMsg("ZOMBIE CIĘ GRYZIE!");
         }
     });
 }
@@ -151,7 +162,7 @@ async function scanLoot(pos) {
     });
 }
 
-// --- BAZY (FIREBASE GLOBAL) ---
+// --- BAZY GLOBALNE ---
 document.getElementById('btn-base').onclick = async () => {
     if (state.wood >= 10 && state.scrap >= 5) {
         const p = player.getLatLng();
@@ -184,7 +195,7 @@ function listenToBases() {
     });
 }
 
-// --- UI I SYSTEMY ---
+// --- UI ---
 document.getElementById('btn-eat').onclick = () => {
     if(state.food > 0) {
         state.food--; state.hp = Math.min(10, state.hp + 3);
@@ -199,7 +210,7 @@ function updateUI(saveToCloud = false) {
     document.getElementById('s-wood').innerText = state.wood;
     document.getElementById('s-food').innerText = state.food;
     
-    saveLocal(); // Zawsze zapisuj lokalnie
+    saveLocal();
 
     if(saveToCloud && auth.currentUser) {
         updateDoc(doc(db, "users", auth.currentUser.uid), state).catch(() => {});
@@ -225,5 +236,4 @@ function showMsg(t) {
     }
 }
 
-// Inicjalizacja UI przy starcie
 updateUI();
