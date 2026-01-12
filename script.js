@@ -22,11 +22,12 @@ let existingBases = {};
 let lastScanPos = null;
 const MAX_ZOMBIES = 12;
 
-// --- LOGOWANIE (NAPRAWIONE) ---
+// --- AUTH LOGIC ---
 document.getElementById('login-btn').onclick = () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Błąd logowania: " + err.message));
+    if(!email || !pass) return alert("Wpisz dane!");
+    signInWithEmailAndPassword(auth, email, pass).catch(err => alert("Błąd: " + err.message));
 };
 
 document.getElementById('register-btn').onclick = () => {
@@ -34,10 +35,12 @@ document.getElementById('register-btn').onclick = () => {
     const pass = document.getElementById('password').value;
     createUserWithEmailAndPassword(auth, email, pass)
         .then(u => setDoc(doc(db, "users", u.user.uid), state))
-        .catch(err => alert("Błąd rejestracji: " + err.message));
+        .catch(err => alert("Błąd: " + err.message));
 };
 
 document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
+
+document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, async (u) => {
     if (u) {
@@ -53,18 +56,18 @@ onAuthStateChanged(auth, async (u) => {
     }
 });
 
-// --- GRA ---
+// --- GAME CORE ---
 function initGame() {
     if (map) return;
     map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.1388, 16.2731], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     player = L.marker([52.1388, 16.2731], { 
-        icon: L.divIcon({ html: '<div id="p-arrow" class="player-arrow"></div>', className: 'p-wrap' }) 
+        icon: L.divIcon({ html: '<div class="player-arrow"></div>', className: 'p-wrap' }) 
     }).addTo(map);
 
     rangeCircle = L.circle([52.1388, 16.2731], {
-        radius: 40, color: '#3388ff', fillOpacity: 0.15, weight: 2
+        radius: 40, color: '#3388ff', fillOpacity: 0.1, weight: 1
     }).addTo(map);
 
     navigator.geolocation.watchPosition(pos => {
@@ -104,11 +107,12 @@ function gameTick() {
         if (dist < 12 && !inSafeZone) { 
             state.hp = Math.max(0, state.hp - 0.4); 
             updateUI(true); 
+            showMsg("ZOMBI CIĘ GRYZIE!");
         }
     });
 }
 
-// --- AKCJE ---
+// --- ACTIONS ---
 document.getElementById('btn-base').onclick = async () => {
     if (state.wood >= 10 && state.scrap >= 5) {
         const p = player.getLatLng();
@@ -118,8 +122,8 @@ document.getElementById('btn-base').onclick = async () => {
         await addDoc(collection(db, "bases"), { lat: p.lat, lng: p.lng, owner: auth.currentUser.uid });
         state.wood -= 10; state.scrap -= 5;
         updateUI(true);
-        showMsg("BAZA ZBUDOWANA!");
-    } else showMsg("BRAK MATERIAŁÓW!");
+        showMsg("BAZA WYBUDOWANA!");
+    } else showMsg("POTRZEBA 10🪵 I 5⚙️");
 };
 
 function listenToBases() {
@@ -135,14 +139,14 @@ function listenToBases() {
             existingBases[docSnap.id] = b;
             L.marker([b.lat, b.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
             if (b.owner === auth.currentUser.uid) {
-                L.circle([b.lat, b.lng], { radius: 30, color: '#2ecc71', fillOpacity: 0.2, weight: 2 }).addTo(map);
+                L.circle([b.lat, b.lng], { radius: 30, color: '#2ecc71', fillOpacity: 0.15, weight: 2 }).addTo(map);
             }
         });
     });
 }
 
 function spawnZombie(pos) {
-    const loc = [pos[0] + (Math.random() - 0.5) * 0.005, pos[1] + (Math.random() - 0.5) * 0.005];
+    const loc = [pos[0] + (Math.random() - 0.5) * 0.006, pos[1] + (Math.random() - 0.5) * 0.006];
     const z = L.marker(loc, { icon: L.divIcon({ html: '💀', className: 'z-icon' }) }).addTo(map);
     zMarkers.push(z);
 }
@@ -164,7 +168,7 @@ async function scanLoot(pos) {
                     state.looted[id] = true;
                     state.scrap += 2; state.wood += 2;
                     updateUI(true);
-                    showMsg("ZEBRANO ŁUP!");
+                    showMsg("ŁUP ZEBRANY! +2⚙️ +2🪵");
                 }
             });
         });
@@ -177,7 +181,7 @@ document.getElementById('btn-attack').onclick = () => {
         if(map.distance(pPos, z.getLatLng()) < 40) {
             map.removeLayer(z);
             state.scrap += 1; updateUI(true);
-            showMsg("ZABITO ZOMBIE!");
+            showMsg("ZOMBI POKONANY! +1⚙️");
             return false;
         }
         return true;
@@ -188,7 +192,8 @@ document.getElementById('btn-eat').onclick = () => {
     if(state.food > 0) {
         state.food--; state.hp = Math.min(10, state.hp + 3);
         updateUI(true);
-    }
+        showMsg("POSIŁEK ZJEDZONY 🍎");
+    } else showMsg("BRAK JEDZENIA!");
 };
 
 function updateUI(saveCloud = false) {
@@ -199,7 +204,7 @@ function updateUI(saveCloud = false) {
     localStorage.setItem("zmapa_progress", JSON.stringify(state));
     if(saveCloud && auth.currentUser) updateDoc(doc(db, "users", auth.currentUser.uid), state);
     if(state.hp <= 0) {
-        alert("ZGINĄŁEŚ!");
+        alert("ZGINĄŁEŚ! TRACISZ ZAPASY.");
         state = { hp: 10, scrap: 0, wood: 0, food: 2, looted: {} };
         updateUI(true); location.reload();
     }
@@ -211,7 +216,7 @@ function showMsg(t) {
     setTimeout(() => m.style.display = "none", 2000);
 }
 
-// Crafting Modal logic
+// Crafting
 const craftModal = document.getElementById('craft-modal');
 document.getElementById('btn-craft').onclick = () => craftModal.style.display = 'block';
 document.getElementById('btn-close-craft').onclick = () => craftModal.style.display = 'none';
@@ -219,7 +224,7 @@ document.getElementById('btn-craft-food').onclick = () => {
     if (state.wood >= 3 && state.scrap >= 2) {
         state.wood -= 3; state.scrap -= 2; state.food++;
         updateUI(true);
-        showMsg("WYPRODUKOWANO JEDZENIE!");
+        showMsg("PROWIANT GOTOWY!");
     } else { showMsg("BRAK MATERIAŁÓW!"); }
 };
 
