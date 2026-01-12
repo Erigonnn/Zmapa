@@ -3,61 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA: RAKONIEWICE</title>
+    <title>Z-MAPA PRO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="landing-page">
         <div class="auth-box">
-            <h1 class="logo">Z-MAPA</h1>
-            <p class="tagline">PROTOKÓŁ PRZETRWANIA</p>
-            <div class="auth-inputs">
-                <input type="email" id="email" placeholder="Email">
-                <input type="password" id="password" placeholder="Hasło">
-                <div class="auth-btns">
-                    <button id="login-btn" class="btn-red">WEJDŹ</button>
-                    <button id="register-btn" class="btn-dark">REJESTRACJA</button>
-                </div>
-                <div class="divider"><span>LUB</span></div>
-                <button id="google-btn" class="btn-google">KONTYNUUJ Z GOOGLE</button>
-            </div>
-            <p id="auth-status" style="color: #ff4444; font-size: 12px; margin-top: 10px;"></p>
+            <h1 style="color:var(--neon-red); font-size: 3rem; margin:0;">Z-MAPA</h1>
+            <p style="letter-spacing: 5px; font-size: 10px; margin-bottom: 30px;">SYSTEM PRZETRWANIA</p>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Hasło">
+            <button id="login-btn" class="btn-main" style="width:100%; margin-top:10px;">ZALOGUJ</button>
+            <button id="google-btn" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Kontynuuj z Google</button>
         </div>
     </div>
 
     <div id="game-container" style="display:none;">
         <div id="map"></div>
-        <div class="ui-top">
-            <div class="player-hud">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div id="display-nick">OCALAŁY</div>
-                    <button id="logout-btn" style="background:none; border:1px solid #444; color:#aaa; font-size:10px; padding:2px 5px; border-radius:4px; cursor:pointer;">WYLOGUJ</button>
+        
+        <div class="ui-wrapper">
+            <div style="display:flex; justify-content: space-between; width: 100%;">
+                <div class="status-panel">
+                    <div style="display:flex; justify-content: space-between; align-items: center;">
+                        <b id="display-nick">OCALAŁY</b>
+                        <button id="logout-btn" style="background:none; border:none; color:#ff3e3e; font-size:10px;">EXIT</button>
+                    </div>
+                    <div class="hp-container"><div id="hp-bar"></div></div>
                 </div>
-                <div class="hp-bg"><div id="hp-bar"></div></div>
-                <div class="res-row">
-                    <span>⚙️ <span id="s-scrap">0</span></span>
-                    <span>🪵 <span id="s-wood">0</span></span>
-                    <span>🍎 <span id="s-food">0</span></span>
+
+                <div class="resource-panel">
+                    <div class="res-item"><span id="s-scrap">0</span><span>Złom</span></div>
+                    <div class="res-item"><span id="s-wood">0</span><span>Drewno</span></div>
+                    <div class="res-item"><span id="s-food">0</span><span>Jedzenie</span></div>
                 </div>
             </div>
-        </div>
-        <div class="ui-side">
-            <button id="btn-craft">⚒️</button>
-            <button id="btn-base">🏠</button>
-        </div>
-        <div id="msg"></div>
-        <div class="ui-bottom">
-            <button id="btn-eat" class="btn-food">🍎</button>
-            <button id="btn-attack" class="btn-attack">ATAKUJ ZOMBI</button>
+
+            <div style="position: absolute; right: 20px; top: 150px; display:flex; flex-direction:column; gap:15px;">
+                <button id="btn-craft" class="btn-round" title="Crafting">⚒️</button>
+                <button id="btn-base" class="btn-round" title="Buduj Bazę">🏠</button>
+            </div>
+
+            <div id="msg" style="display:none;"></div>
+
+            <div class="action-bar">
+                <button id="btn-eat" class="btn-round" style="border-color: var(--neon-green);">🍎</button>
+                <button id="btn-attack" class="btn-main">ATAKUJ</button>
+            </div>
         </div>
     </div>
 
     <div id="craft-modal" class="modal" style="display:none;">
-        <h3 style="margin-top:0;">WARSZTAT</h3>
-        <p style="font-size: 12px; color: #aaa;">Potrzebujesz: 3 Drewna + 2 Złomu</p>
-        <button id="btn-craft-food" class="btn-red" style="width:100%; margin-bottom:10px; cursor:pointer;">GOTUJ JEDZENIE (🍎+1)</button>
-        <button id="btn-close-craft" class="btn-dark" style="width:100%; cursor:pointer;">ZAMKNIJ</button>
+        <h2 style="color:var(--neon-green)">WARSZTAT</h2>
+        <p>Przetwórz 3x Drewno i 2x Złom na zapasy żywności.</p>
+        <button id="btn-craft-food" class="btn-main" style="background:var(--neon-green); color:#000;">PRODUKUJ 🍎</button>
+        <br><br>
+        <button id="btn-close-craft" style="background:none; border:none; color:#888;">ANULUJ</button>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
