@@ -90,7 +90,7 @@ function initGame() {
     setInterval(updateZombies, 1500);
 }
 
-// --- POPRAWIONE ZOMBIE (LOGIKA DYSTANSU) ---
+// --- POPRAWIONE ZOMBIE (DYSTANS POGONI) ---
 function updateZombies() {
     if(!player) return;
     const pPos = player.getLatLng();
@@ -99,14 +99,14 @@ function updateZombies() {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
         
-        if (dist < 60) { // Zauważają gracza z 60 metrów
-            const speed = 0.00018; 
+        if (dist < 40) { // Widzą gracza z 40 metrów
+            const speed = 0.0002; 
             z.setLatLng([
                 zPos.lat + (pPos.lat > zPos.lat ? speed : -speed), 
                 zPos.lng + (pPos.lng > zPos.lng ? speed : -speed)
             ]);
         } else { // Spacerują losowo, gdy gracz jest daleko
-            const drift = 0.00005;
+            const drift = 0.00004;
             z.setLatLng([
                 zPos.lat + (Math.random() - 0.5) * drift, 
                 zPos.lng + (Math.random() - 0.5) * drift
@@ -114,7 +114,7 @@ function updateZombies() {
         }
 
         if (dist < 12) { // Atak
-            state.hp = Math.max(0, state.hp - 0.4); 
+            state.hp = Math.max(0, state.hp - 0.6); 
             updateUI(true); 
             showMsg("ZOMBIE CIĘ GRYZIE!");
         }
@@ -195,7 +195,7 @@ function listenToBases() {
     });
 }
 
-// --- UI ---
+// --- UI I SYSTEM RESETU ---
 document.getElementById('btn-eat').onclick = () => {
     if(state.food > 0) {
         state.food--; state.hp = Math.min(10, state.hp + 3);
@@ -217,9 +217,15 @@ function updateUI(saveToCloud = false) {
     }
 
     if(state.hp <= 0) { 
-        alert("ZGINĄŁEŚ!"); 
-        state.hp = 10; 
-        updateUI(true); 
+        alert("ZGINĄŁEŚ! TWOJE SUROWCE ZOSTAŁY UTRACONE."); 
+        // RESET SUROWCÓW
+        state.hp = 10;
+        state.scrap = 0;
+        state.wood = 0;
+        state.food = 2;
+        state.looted = {}; // Budynki można przeszukać ponownie
+        
+        updateUI(true); // Zapisz wyzerowany stan
         location.reload(); 
     }
 }
