@@ -14,33 +14,51 @@
         <div class="landing-bg"></div>
         <div class="content">
             <h1 class="glitch" data-text="Z-MAPA">Z-MAPA</h1>
-            <p class="tagline">SYSTEM PRZETRWANIA RZECZYWISTEGO</p>
-            <button id="google-btn" class="btn-main">AKTYWUJ GOOGLE ID</button>
+            <button id="google-btn" class="btn-main">AKTYWUJ SYSTEM</button>
         </div>
     </div>
 
     <div id="game-container" style="display:none;">
         <div id="map"></div>
+        
         <div class="hud">
             <div class="hud-top">
-                <div class="status-panel">
+                <div class="ui-panel biometria">
                     <div class="label">BIOMETRIA</div>
-                    <div class="hp-bar-bg"><div id="hp-bar"></div></div>
+                    <div class="hp-track"><div id="hp-bar"></div></div>
                 </div>
-                <div class="resource-panel">
-                    <div class="res-item">⚙️ <span id="s-scrap">0</span></div>
-                    <div class="res-item">🪵 <span id="s-wood">0</span></div>
-                    <div class="res-item">🍎 <span id="s-food">0</span></div>
+                <div class="ui-panel resources">
+                    <div class="res">⚙️ <span id="s-scrap">0</span></div>
+                    <div class="res">🪵 <span id="s-wood">0</span></div>
+                    <div class="res">🍎 <span id="s-food">0</span></div>
                 </div>
             </div>
 
             <div class="hud-side">
+                <button id="btn-open-craft" class="btn-circle gold">⚒️</button>
                 <button id="logout-btn" class="btn-circle">✕</button>
             </div>
 
             <div class="hud-bottom">
                 <button id="btn-eat" class="btn-action">🍎 ZJEDZ</button>
                 <button id="btn-attack" class="btn-action primary">ELIMINUJ CEL</button>
+            </div>
+        </div>
+
+        <div id="craft-panel" class="modal" style="display:none;">
+            <div class="modal-header">
+                <h3>WARSZTAT POLOWY</h3>
+                <button id="btn-close-craft">✕</button>
+            </div>
+            <div class="craft-list">
+                <div class="craft-item">
+                    <span>🍎 Rycje (Jedzenie)</span>
+                    <button onclick="craft('food')">WYTWÓRZ (5⚙️ + 5🪵)</button>
+                </div>
+                <div class="craft-item">
+                    <span>🏠 Baza (Schronienie)</span>
+                    <button onclick="craft('base')">POSTAW (50⚙️ + 50🪵)</button>
+                </div>
             </div>
         </div>
     </div>
