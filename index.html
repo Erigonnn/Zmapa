@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Z-MAPA: RAKONIEWICE</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="landing-page">
+        <div class="auth-box">
+            <h1 class="logo">Z-MAPA</h1>
+            <p class="tagline">PROTOKÓŁ PRZETRWANIA</p>
+            <div class="auth-inputs">
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Hasło">
+                <div class="auth-btns">
+                    <button id="login-btn" class="btn-red">WEJDŹ</button>
+                    <button id="register-btn" class="btn-dark">REJESTRACJA</button>
+                </div>
+                <div class="divider"><span>LUB</span></div>
+                <button id="google-btn" class="btn-google">KONTYNUUJ Z GOOGLE</button>
+            </div>
+            <p id="auth-status" style="color: #ff4444; font-size: 12px; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="game-container" style="display:none;">
+        <div id="map"></div>
+        <div class="ui-top">
+            <div class="player-hud">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div id="display-nick">OCALAŁY</div>
+                    <button id="logout-btn" style="background:none; border:1px solid #444; color:#aaa; font-size:10px; padding:2px 5px; border-radius:4px; cursor:pointer;">WYLOGUJ</button>
+                </div>
+                <div class="hp-bg"><div id="hp-bar"></div></div>
+                <div class="res-row">
+                    <span>⚙️ <span id="s-scrap">0</span></span>
+                    <span>🪵 <span id="s-wood">0</span></span>
+                    <span>🍎 <span id="s-food">0</span></span>
+                </div>
+            </div>
+        </div>
+        <div class="ui-side">
+            <button id="btn-craft">⚒️</button>
+            <button id="btn-base">🏠</button>
+        </div>
+        <div id="msg"></div>
+        <div class="ui-bottom">
+            <button id="btn-eat" class="btn-food">🍎</button>
+            <button id="btn-attack" class="btn-attack">ATAKUJ ZOMBI</button>
+        </div>
+    </div>
+
+    <div id="craft-modal" class="modal" style="display:none;">
+        <h3 style="margin-top:0;">WARSZTAT</h3>
+        <p style="font-size: 12px; color: #aaa;">Potrzebujesz: 3 Drewna + 2 Złomu</p>
+        <button id="btn-craft-food" class="btn-red" style="width:100%; margin-bottom:10px; cursor:pointer;">GOTUJ JEDZENIE (🍎+1)</button>
+        <button id="btn-close-craft" class="btn-dark" style="width:100%; cursor:pointer;">ZAMKNIJ</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>

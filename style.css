@@ -1,0 +1,36 @@
+:root { --red: #ff4444; --dark: #111; }
+body, html { margin: 0; padding: 0; height: 100%; background: #000; font-family: 'Arial', sans-serif; overflow: hidden; color: white; }
+
+/* Logowanie */
+#landing-page { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; justify-content: center; align-items: center; }
+.auth-box { background: #111; padding: 30px; border-radius: 15px; border: 2px solid var(--red); width: 85%; max-width: 350px; text-align: center; }
+.logo { color: var(--red); font-size: 2.5rem; margin: 0; letter-spacing: 5px; font-weight: bold; }
+.tagline { font-size: 0.7rem; color: #666; margin-bottom: 20px; }
+input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+.auth-btns { display: flex; gap: 10px; margin-top: 10px; }
+.btn-red { flex: 1; background: var(--red); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; }
+.btn-dark { flex: 1; background: #444; color: white; border: none; padding: 12px; border-radius: 8px; }
+.btn-google { width: 100%; margin-top: 15px; padding: 12px; background: white; color: #000; border: none; border-radius: 8px; font-weight: bold; }
+
+/* HUD */
+#map { position: absolute; inset: 0; z-index: 1; filter: brightness(0.7); }
+.ui-top { position: absolute; top: 10px; width: 100%; z-index: 10; display: flex; justify-content: center; }
+.player-hud { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 10px; width: 85%; border: 1px solid #333; }
+.hp-bg { height: 8px; background: #333; border-radius: 4px; margin: 5px 0; overflow: hidden; }
+#hp-bar { height: 100%; background: var(--red); width: 100%; transition: 0.3s; }
+.res-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
+
+.ui-side { position: absolute; right: 10px; top: 120px; z-index: 10; display: flex; flex-direction: column; gap: 10px; }
+.ui-side button { width: 50px; height: 50px; background: #222; border: 2px solid var(--red); border-radius: 10px; font-size: 20px; color: white; }
+
+.ui-bottom { position: absolute; bottom: 20px; width: 100%; z-index: 10; display: flex; justify-content: center; gap: 15px; }
+.btn-attack { background: var(--red); border: none; color: white; padding: 15px 40px; border-radius: 30px; font-weight: bold; }
+.btn-food { width: 55px; height: 55px; border-radius: 50%; background: #222; border: 2px solid white; font-size: 22px; }
+
+/* Ikony */
+.player-arrow { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid #00ccff; }
+.z-icon { font-size: 25px; text-shadow: 0 0 5px red; }
+.poi-icon { font-size: 22px; filter: drop-shadow(0 0 3px orange); }
+
+.modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; background: #111; border: 2px solid var(--red); padding: 20px; border-radius: 10px; text-align: center; }
+#msg { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); z-index: 100; background: var(--red); padding: 5px 15px; border-radius: 5px; display: none; }
