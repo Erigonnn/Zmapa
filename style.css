@@ -1,68 +1,74 @@
-/* --- USTAWIENIA GŁÓWNE --- */
 :root {
-    --tox-green: #0aff0a;
-    --alert-red: #ff2a2a;
-    --dark-bg: #050505;
-    --glass: rgba(20, 20, 20, 0.85);
+    --neon-green: #0f0;
+    --blood-red: #ff3333;
+    --dark-bg: #0a0a0a;
+    --panel-bg: rgba(0, 20, 0, 0.85);
+    --border-color: #335533;
 }
 
-body { margin: 0; background: var(--dark-bg); color: white; font-family: 'Share Tech Mono', monospace; overflow: hidden; }
+body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; color: #fff; overflow: hidden; }
 
-/* --- LANDING PAGE --- */
-#landing-page { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; overflow-y: auto; }
-.landing-overlay { position: absolute; inset: 0; background: radial-gradient(circle, #1a0000 0%, #000000 90%); opacity: 0.8; z-index: -1; }
-.content-wrapper { width: 90%; max-width: 500px; text-align: center; padding: 20px; }
+/* === LANDING PAGE === */
+#landing-page { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: #000; }
+.landing-bg { position: absolute; inset: 0; background: radial-gradient(circle, #1a0505 0%, #000 90%); opacity: 0.8; z-index: -1; }
+.content-box { width: 90%; max-width: 400px; text-align: center; position: relative; z-index: 2; }
 
-.glitch-logo { font-size: 4rem; color: var(--alert-red); text-shadow: 2px 2px 0px var(--tox-green); margin: 0; letter-spacing: 5px; animation: glitch 2s infinite; }
-.subtitle { color: #888; letter-spacing: 3px; margin-bottom: 40px; font-size: 1rem; border-bottom: 1px solid var(--alert-red); display: inline-block; padding-bottom: 5px; }
+/* Logo Glitch Effect */
+.glitch { font-size: 4rem; margin: 0; color: #fff; text-shadow: 2px 2px var(--blood-red); animation: glitch 1s infinite alternate; }
+.subtitle { color: var(--neon-green); letter-spacing: 2px; margin-bottom: 30px; border-bottom: 1px solid var(--neon-green); display: inline-block; }
 
-.game-info { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
-.info-card { background: rgba(255,255,255,0.05); padding: 15px; border-left: 3px solid var(--tox-green); text-align: left; }
-.info-card h3 { margin: 0 0 5px 0; color: var(--tox-green); font-size: 1.2rem; }
-.info-card p { margin: 0; font-size: 0.9rem; color: #ccc; }
+.features-grid { display: flex; gap: 10px; margin-bottom: 30px; justify-content: center; }
+.feature { background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid #333; flex: 1; }
+.feature h3 { color: var(--blood-red); margin: 5px 0; font-size: 1rem; }
+.feature p { font-size: 0.8rem; color: #aaa; margin: 0; }
 
-.auth-section input { width: 100%; padding: 12px; margin: 8px 0; background: #111; border: 1px solid #444; color: var(--tox-green); font-family: inherit; box-sizing: border-box; }
-.auth-section input:focus { border-color: var(--tox-green); outline: none; }
+.auth-panel input { width: 100%; padding: 12px; margin: 5px 0; background: #111; border: 1px solid var(--border-color); color: var(--neon-green); font-family: inherit; box-sizing: border-box; }
+.btn-main { background: var(--blood-red); color: white; border: none; padding: 15px; width: 100%; font-size: 1.2rem; font-family: inherit; cursor: pointer; margin-top: 10px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); transition: 0.2s; }
+.btn-main:active { transform: scale(0.98); background: #cc0000; }
+.btn-google { background: transparent; border: 1px solid #555; color: #aaa; width: 100%; padding: 10px; margin-top: 10px; cursor: pointer; }
 
-/* --- PRZYCISKI --- */
-.btn-main { background: var(--alert-red); color: white; border: none; padding: 15px 30px; font-size: 1.2rem; font-family: inherit; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%); transition: 0.2s; }
-.btn-main:active { transform: scale(0.95); background: #cc0000; }
-.btn-link { background: none; border: none; color: #666; cursor: pointer; margin-top: 10px; text-decoration: underline; }
-.pulse { animation: pulse 2s infinite; }
+/* === GAME UI === */
+#map { position: absolute; inset: 0; z-index: 1; filter: grayscale(100%) contrast(1.2) brightness(0.6); }
 
-/* --- MAPA I UI GRY --- */
-#map { position: absolute; inset: 0; z-index: 1; filter: grayscale(0.8) contrast(1.2) brightness(0.6); }
+.ui-overlay { position: absolute; inset: 0; z-index: 5000; pointer-events: none; padding: 15px; }
+.ui-overlay * { pointer-events: auto; }
 
-.ui-layer { position: absolute; inset: 0; z-index: 5000; pointer-events: none; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
-.ui-layer * { pointer-events: auto; }
+.hud-panel { background: var(--panel-bg); border: 1px solid var(--neon-green); padding: 10px; position: absolute; }
+.top-left { top: 15px; left: 15px; width: 150px; border-radius: 0 15px 0 0; }
+.top-right { top: 15px; right: 15px; text-align: right; border-radius: 15px 0 0 0; }
 
-/* HUD ELEMENTY */
-.hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.player-card { background: var(--glass); padding: 10px; border: 1px solid var(--tox-green); min-width: 150px; }
-.hp-wrapper { width: 100%; height: 10px; background: #333; margin-top: 5px; }
-#hp-bar { width: 100%; height: 100%; background: var(--alert-red); transition: width 0.3s; box-shadow: 0 0 8px var(--alert-red); }
+.player-label { font-size: 0.8rem; color: #888; margin-bottom: 5px; }
+.hp-track { width: 100%; height: 10px; background: #222; border: 1px solid #444; }
+#hp-bar { width: 100%; height: 100%; background: var(--blood-red); transition: width 0.3s; box-shadow: 0 0 10px var(--blood-red); }
 
-.hud-resources { position: absolute; right: 15px; top: 15px; display: flex; flex-direction: column; gap: 5px; }
-.res-box { background: var(--glass); padding: 5px 10px; border-right: 3px solid var(--tox-green); font-size: 1.1rem; text-align: right; }
+.res-item { font-size: 0.9rem; margin-bottom: 2px; color: #ccc; }
+.val { color: var(--neon-green); font-weight: bold; }
 
-.hud-tools { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; }
-.btn-circle { width: 60px; height: 60px; border-radius: 50%; background: var(--glass); border: 2px solid white; color: white; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.hud-side-buttons { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; }
+.circle-btn { width: 55px; height: 55px; border-radius: 50%; background: #000; border: 2px solid var(--neon-green); color: var(--neon-green); font-size: 24px; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,0,0.2); transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+.circle-btn:active { transform: scale(0.9); }
+.circle-btn.small { width: 40px; height: 40px; font-size: 16px; border-color: #666; color: #666; }
 
-.hud-actions { width: 100%; display: flex; justify-content: center; gap: 15px; padding-bottom: 20px; }
-.btn-action { padding: 15px 30px; border: none; font-family: inherit; font-weight: bold; font-size: 1.1rem; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%); cursor: pointer; }
-.btn-action.prim { background: var(--alert-red); color: white; min-width: 150px; }
-.btn-action.sec { background: var(--tox-green); color: black; }
+.hud-bottom { position: absolute; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; gap: 15px; }
+.action-btn { padding: 15px 30px; border: none; font-family: inherit; font-size: 1.1rem; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%); }
+.action-btn.red { background: var(--blood-red); color: white; min-width: 160px; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
+.action-btn.green { background: #1a4d1a; color: var(--neon-green); border: 1px solid var(--neon-green); }
 
-/* MODAL I IKONY */
+/* === MODAL & NOTIFICATIONS === */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; display: flex; align-items: center; justify-content: center; }
-.modal-window { background: #111; border: 2px solid var(--tox-green); padding: 30px; width: 80%; max-width: 300px; text-align: center; }
-.notification { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: var(--tox-green); color: black; padding: 10px 20px; font-weight: bold; z-index: 9999; }
+.modal-window { background: #111; border: 2px solid var(--neon-green); padding: 30px; width: 85%; max-width: 300px; text-align: center; box-shadow: 0 0 30px rgba(0,255,0,0.1); }
+.craft-row { margin: 20px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+.btn-text { background: none; border: none; color: #666; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+.full { width: 100%; }
 
-/* CUSTOMOWE IKONY MAPY (CSS-Only) */
-.player-marker { width: 20px; height: 20px; background: var(--tox-green); border-radius: 50%; box-shadow: 0 0 15px var(--tox-green); border: 2px solid white; }
-.zombie-marker { font-size: 30px; filter: drop-shadow(0 0 5px red); animation: bounce 1s infinite alternate; }
-.loot-marker { font-size: 32px; filter: drop-shadow(0 0 8px gold); cursor: pointer; }
-.base-marker { font-size: 35px; filter: drop-shadow(0 0 10px var(--tox-green)); }
+.toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: var(--blood-red); color: white; padding: 10px 25px; z-index: 9999; font-weight: bold; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
 
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); box-shadow: 0 0 20px var(--alert-red); } 100% { transform: scale(1); } }
+/* === MAP MARKERS === */
+.player-icon { width: 20px; height: 20px; background: #00ffff; border-radius: 50%; box-shadow: 0 0 15px #00ffff; border: 2px solid white; }
+.zombie-icon { font-size: 30px; filter: drop-shadow(0 0 5px red); animation: bounce 1s infinite alternate; }
+.loot-icon { font-size: 32px; filter: drop-shadow(0 0 8px gold); cursor: pointer; animation: float 2s infinite ease-in-out; }
+.base-icon { font-size: 32px; filter: drop-shadow(0 0 10px var(--neon-green)); }
+
+@keyframes glitch { 0% { text-shadow: 2px 2px red; } 50% { text-shadow: -2px -2px cyan; } 100% { text-shadow: 2px -2px red; } }
 @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
