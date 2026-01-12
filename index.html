@@ -15,29 +15,21 @@
         <div class="content">
             <h1 class="glitch">Z-MAPA</h1>
             <p class="tagline">SYSTEM PRZETRWANIA RZECZYWISTEGO</p>
-            
-            <div class="info-grid">
-                <div class="card"><h3>🌍 ŚWIAT</h3><p>Twoja okolica to strefa walki.</p></div>
-                <div class="card"><h3>🧟 HORDY</h3><p>Zombie tropią Twój sygnał GPS.</p></div>
-                <div class="card"><h3>📦 ŁUPY</h3><p>Skanuj teren w poszukiwaniu zapasów.</p></div>
-            </div>
-
             <div class="auth">
-                <input type="email" id="email" placeholder="IDENTYFIKATOR (EMAIL)">
-                <input type="password" id="password" placeholder="HASŁO DOSTĘPU">
+                <input type="email" id="email" placeholder="EMAIL">
+                <input type="password" id="password" placeholder="HASŁO">
                 <button id="login-btn" class="btn-main pulse">AKTYWUJ SYSTEM</button>
-                <button id="google-btn" class="btn-sub">LOGOWANIE GOOGLE</button>
+                <button id="google-btn" class="btn-sub">ZALOGUJ PRZEZ GOOGLE</button>
             </div>
         </div>
     </div>
 
     <div id="game-container" style="display:none;">
         <div id="map"></div>
-        
         <div class="hud">
             <div class="hud-top">
                 <div class="status-box">
-                    <label>SYGNAŁ ŻYCIOWY</label>
+                    <label>BIOMETRIA</label>
                     <div class="hp-bar-container"><div id="hp-bar"></div></div>
                 </div>
                 <div class="resources">
@@ -48,6 +40,7 @@
             </div>
 
             <div class="hud-side">
+                <button id="btn-scan" class="btn-circle" style="border-color: gold;" title="Skanuj loot">📡</button>
                 <button id="btn-craft" class="btn-circle">⚒️</button>
                 <button id="btn-base" class="btn-circle">🏠</button>
                 <button id="logout-btn" class="btn-circle small">✕</button>
@@ -55,20 +48,16 @@
 
             <div class="hud-bottom">
                 <button id="btn-eat" class="btn-action">🍎 ZJEDZ</button>
-                <button id="btn-attack" class="btn-action primary">ATAKUJ (ZASIĘG 40M)</button>
+                <button id="btn-attack" class="btn-action primary">ATAKUJ CEL</button>
             </div>
         </div>
     </div>
 
     <div id="craft-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h2>WARSZTAT POLOWY</h2>
-            <div class="item">
-                <p>PACZKA ŻYWNOŚCI (🍎)</p>
-                <span>KOSZT: 3x🪵 + 2x⚙️</span>
-                <button id="btn-craft-food" class="btn-main">PRODUKUJ</button>
-            </div>
-            <button id="btn-close-craft" class="btn-text">POWRÓT DO MAPY</button>
+            <h2>WARSZTAT</h2>
+            <button id="btn-craft-food" class="btn-main">PRODUKUJ 🍎 (3🪵 2⚙️)</button>
+            <button id="btn-close-craft" class="btn-text">POWRÓT</button>
         </div>
     </div>
 

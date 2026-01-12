@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { 
@@ -19,15 +19,19 @@ const provider = new GoogleAuthProvider();
 let state = { hp: 10, scrap: 0, wood: 0, food: 3, looted: {} };
 let map, playerMarker, rangeCircle;
 let zMarkers = [];
-let lastLootPos = null;
 let existingBases = {};
 
-// LOGOWANIE
+// --- LOGOWANIE (POPRAWIONE NA REDIRECT) ---
+document.getElementById('google-btn').onclick = () => signInWithRedirect(auth, provider);
+
+getRedirectResult(auth).then((result) => {
+    if (result) console.log("Zalogowano pomyślnie z Google");
+}).catch(err => alert("Błąd Google: " + err.code));
+
 document.getElementById('login-btn').onclick = () => {
     const e = document.getElementById('email').value, p = document.getElementById('password').value;
-    signInWithEmailAndPassword(auth, e, p).catch(err => alert("Błąd: " + err.message));
+    signInWithEmailAndPassword(auth, e, p).catch(err => alert(err.message));
 };
-document.getElementById('google-btn').onclick = () => signInWithPopup(auth, provider);
 document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.reload());
 
 onAuthStateChanged(auth, async user => {
@@ -42,80 +46,70 @@ onAuthStateChanged(auth, async user => {
     }
 });
 
-// MAPA I GPS
+// --- MECHANIKA MAPY ---
 function initGame() {
     if (map) return;
     map = L.map('map', { zoomControl: false, attributionControl: false }).setView([52.2, 21.0], 18);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Znacznik gracza (strzałka)
     playerMarker = L.marker([0, 0], { 
-        icon: L.divIcon({ className: 'player-arrow', html: '', iconSize: [24, 24], iconAnchor: [12, 12] }) 
+        icon: L.divIcon({ className: 'player-arrow', html: '', iconSize: [20, 20], iconAnchor: [10, 10] }) 
     }).addTo(map);
 
-    rangeCircle = L.circle([0, 0], { radius: 40, color: '#00f2ff', fillOpacity: 0.1, weight: 1 }).addTo(map);
+    rangeCircle = L.circle([0, 0], { radius: 45, color: '#00f2ff', fillOpacity: 0.1 }).addTo(map);
 
-    // OBSŁUGA KOMPASU (OBRÓT)
-    if (window.DeviceOrientationEvent) {
-        window.addEventListener('deviceorientationabsolute', (event) => {
-            let heading = event.alpha; // Dla Androida
-            if (event.webkitCompassHeading) heading = event.webkitCompassHeading; // Dla iOS
-            
-            if (heading !== null) {
-                const el = playerMarker.getElement();
-                if (el) el.style.transform = `rotate(${heading}deg)`;
-            }
-        }, true);
-    }
+    // OBRÓT STRZAŁKI
+    window.addEventListener('deviceorientationabsolute', (e) => {
+        let heading = e.webkitCompassHeading || (360 - e.alpha);
+        if (heading) {
+            const el = playerMarker.getElement();
+            if (el) el.style.transform = `rotate(${heading}deg)`;
+        }
+    }, true);
 
-    // ŚLEDZENIE GPS
+    // GPS + AUTO-LOOT
     navigator.geolocation.watchPosition(pos => {
-        const lat = pos.coords.latitude, lng = pos.coords.longitude;
-        const newPos = [lat, lng];
-        
+        const newPos = [pos.coords.latitude, pos.coords.longitude];
         playerMarker.setLatLng(newPos);
         rangeCircle.setLatLng(newPos);
         map.panTo(newPos);
-
-        // Generuj loot i zombie, jeśli przeszedłeś min. 40 metrów
-        if (!lastLootPos || map.distance(newPos, lastLootPos) > 40) {
-            lastLootPos = newPos;
-            spawnLootArea(newPos);
-            if (zMarkers.length < 5) spawnZombie(newPos);
-        }
+        
+        // Co 50 metrów generuj zombie
+        if (zMarkers.length < 4) spawnZombie(newPos);
     }, null, { enableHighAccuracy: true });
 
     setInterval(gameLoop, 1000);
 }
 
-// SYSTEM LOOTU (GWARANTOWANY)
+// --- GWARANTOWANY LOOT ---
 function spawnLootArea(pos) {
-    // Tworzy 5 losowych skrzynek w zasięgu wzroku
-    for(let i=0; i<5; i++) {
-        const latOff = (Math.random() - 0.5) * 0.0015;
-        const lngOff = (Math.random() - 0.5) * 0.0015;
-        const id = `loot_${Math.floor(pos[0]*10000)}_${i}`;
+    for(let i=0; i<6; i++) {
+        const latOff = (Math.random() - 0.5) * 0.002;
+        const lngOff = (Math.random() - 0.5) * 0.002;
+        const id = `loot_${Date.now()}_${i}`;
         
-        if (!state.looted[id]) {
-            const m = L.marker([pos[0] + latOff, pos[1] + lngOff], {
-                icon: L.divIcon({ html: '📦', className: 'loot-icon', iconSize: [35, 35] })
-            }).addTo(map);
+        const m = L.marker([pos[0] + latOff, pos[1] + lngOff], {
+            icon: L.divIcon({ html: '📦', className: 'loot-icon' })
+        }).addTo(map);
 
-            m.on('click', () => {
-                if (map.distance(playerMarker.getLatLng(), m.getLatLng()) < 45) {
-                    map.removeLayer(m);
-                    state.looted[id] = true;
-                    const sc = Math.floor(Math.random()*3)+2, wd = Math.floor(Math.random()*3)+2;
-                    state.scrap += sc; state.wood += wd;
-                    showMsg(`ŁUP: +${sc}⚙️ +${wd}🪵`);
-                    updateUI(true);
-                } else showMsg("ZA DALEKO!");
-            });
-        }
+        m.on('click', () => {
+            if (map.distance(playerMarker.getLatLng(), m.getLatLng()) < 45) {
+                map.removeLayer(m);
+                state.scrap += 2; state.wood += 2;
+                showMsg("ZEBRANO ZASYBY (+2⚙️ +2🪵)");
+                updateUI(true);
+            } else showMsg("POZA ZASIĘGIEM!");
+        });
     }
 }
 
-// ZOMBIE AI
+document.getElementById('btn-scan').onclick = () => {
+    const p = playerMarker.getLatLng();
+    spawnLootArea([p.lat, p.lng]);
+    showMsg("SKANOWANIE ZAKOŃCZONE...");
+};
+
+// --- WALKA I ZOMBIE ---
 function spawnZombie(center) {
     const lat = center[0] + (Math.random()-0.5)*0.01;
     const lng = center[1] + (Math.random()-0.5)*0.01;
@@ -124,77 +118,51 @@ function spawnZombie(center) {
 }
 
 function gameLoop() {
-    if(!playerMarker || !auth.currentUser) return;
+    if(!playerMarker) return;
     const pPos = playerMarker.getLatLng();
-    let isSafe = false;
-
-    // Leczenie w bazie
-    Object.values(existingBases).forEach(b => {
-        if(b.owner === auth.currentUser.uid && map.distance(pPos, [b.lat, b.lng]) < 30) {
-            isSafe = true;
-            if(state.hp < 10) state.hp = Math.min(10, state.hp + 0.1);
-        }
-    });
-
     zMarkers.forEach(z => {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
-        if(dist < 60) {
-            const move = 0.0001; // Prędkość zombie
-            z.setLatLng([
-                zPos.lat + (pPos.lat > zPos.lat ? move : -move),
-                zPos.lng + (pPos.lng > zPos.lng ? move : -move)
-            ]);
-            if(dist < 10 && !isSafe) {
-                state.hp -= 0.4;
-                showMsg("⚠️ OSTRZEŻENIE: ATAK!");
-            }
+        if(dist < 50) {
+            z.setLatLng([zPos.lat + (pPos.lat > zPos.lat ? 0.0001 : -0.0001), zPos.lng + (pPos.lng > zPos.lng ? 0.0001 : -0.0001)]);
+            if(dist < 10) { state.hp -= 0.2; updateUI(); }
         }
     });
-    updateUI();
 }
 
-// AKCJE GRACZA
 document.getElementById('btn-attack').onclick = () => {
     const pPos = playerMarker.getLatLng();
-    let kill = false;
     zMarkers = zMarkers.filter(z => {
         if(map.distance(pPos, z.getLatLng()) < 45) {
-            map.removeLayer(z);
-            state.scrap += 2;
-            kill = true; return false;
+            map.removeLayer(z); state.scrap += 3;
+            showMsg("ZOMBIE ZNEUTRALIZOWANY (+3⚙️)");
+            updateUI(true); return false;
         }
         return true;
     });
-    if(kill) { showMsg("CEL WYELIMINOWANY (+2⚙️)"); updateUI(true); }
 };
 
+// --- BAZA I CRAFT ---
 document.getElementById('btn-base').onclick = async () => {
     if(state.wood >= 10 && state.scrap >= 5) {
         const p = playerMarker.getLatLng();
-        const q = query(collection(db, "bases"), where("owner", "==", auth.currentUser.uid));
-        const old = await getDocs(q);
-        old.forEach(d => deleteDoc(d.ref));
         await addDoc(collection(db, "bases"), { lat: p.lat, lng: p.lng, owner: auth.currentUser.uid });
         state.wood -= 10; state.scrap -= 5;
-        showMsg("BAZA OPERACYJNA AKTYWNA");
+        showMsg("BAZA POSTAWIONA");
         updateUI(true);
-    } else showMsg("BRAK MATERIAŁÓW (10🪵 5⚙️)");
+    } else showMsg("ZA MAŁO MATERIAŁÓW");
 };
 
 function listenToBases() {
     onSnapshot(collection(db, "bases"), snap => {
         map.eachLayer(l => { if(l.options && l.options.className === 'base-icon') map.removeLayer(l); });
-        existingBases = {};
         snap.forEach(d => {
             const b = d.data();
-            existingBases[d.id] = b;
             L.marker([b.lat, b.lng], { icon: L.divIcon({ html: '🏠', className: 'base-icon' }) }).addTo(map);
         });
     });
 }
 
-// CRAFTING & UI
 document.getElementById('btn-craft').onclick = () => document.getElementById('craft-modal').style.display = 'flex';
 document.getElementById('btn-close-craft').onclick = () => document.getElementById('craft-modal').style.display = 'none';
 document.getElementById('btn-craft-food').onclick = () => {
@@ -204,7 +172,7 @@ document.getElementById('btn-craft-food').onclick = () => {
     }
 };
 document.getElementById('btn-eat').onclick = () => {
-    if(state.food > 0) { state.food--; state.hp = Math.min(10, state.hp + 4); updateUI(true); }
+    if(state.food > 0) { state.food--; state.hp = Math.min(10, state.hp + 5); updateUI(true); }
 };
 
 function updateUI(cloud = false) {
@@ -212,16 +180,11 @@ function updateUI(cloud = false) {
     document.getElementById('s-scrap').innerText = state.scrap;
     document.getElementById('s-wood').innerText = state.wood;
     document.getElementById('s-food').innerText = state.food;
-    if(state.hp <= 0) {
-        alert("SYSTEM SKASOWANY. RESTART...");
-        state = { hp: 10, scrap: 0, wood: 0, food: 3, looted: {} };
-        cloud = true;
-    }
     if(cloud && auth.currentUser) updateDoc(doc(db, "users", auth.currentUser.uid), state);
 }
 
 function showMsg(t) {
     const m = document.getElementById("msg");
     m.innerText = t; m.style.display = "block";
-    setTimeout(() => m.style.display = "none", 2000);
+    setTimeout(() => m.style.display = "none", 2500);
 }
