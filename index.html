@@ -13,8 +13,9 @@
     <div id="landing-page">
         <div class="landing-bg"></div>
         <div class="content">
-            <h1 class="glitch">Z-MAPA</h1>
-            <button id="google-btn" class="btn-main pulse">AKTYWUJ GOOGLE ID</button>
+            <h1 class="glitch" data-text="Z-MAPA">Z-MAPA</h1>
+            <p class="tagline">SYSTEM PRZETRWANIA RZECZYWISTEGO</p>
+            <button id="google-btn" class="btn-main">AKTYWUJ GOOGLE ID</button>
         </div>
     </div>
 
@@ -22,19 +23,21 @@
         <div id="map"></div>
         <div class="hud">
             <div class="hud-top">
-                <div class="status-box">
-                    <label>BIOMETRIA</label>
-                    <div class="hp-bar-container"><div id="hp-bar"></div></div>
+                <div class="status-panel">
+                    <div class="label">BIOMETRIA</div>
+                    <div class="hp-bar-bg"><div id="hp-bar"></div></div>
                 </div>
-                <div class="resources">
-                    <div class="res">⚙️ <span id="s-scrap">0</span></div>
-                    <div class="res">🪵 <span id="s-wood">0</span></div>
-                    <div class="res">🍎 <span id="s-food">0</span></div>
+                <div class="resource-panel">
+                    <div class="res-item">⚙️ <span id="s-scrap">0</span></div>
+                    <div class="res-item">🪵 <span id="s-wood">0</span></div>
+                    <div class="res-item">🍎 <span id="s-food">0</span></div>
                 </div>
             </div>
+
             <div class="hud-side">
                 <button id="logout-btn" class="btn-circle">✕</button>
             </div>
+
             <div class="hud-bottom">
                 <button id="btn-eat" class="btn-action">🍎 ZJEDZ</button>
                 <button id="btn-attack" class="btn-action primary">ELIMINUJ CEL</button>

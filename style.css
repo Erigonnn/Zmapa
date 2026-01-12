@@ -1,32 +1,57 @@
-:root { --green: #00ff41; --red: #ff003c; --blue: #00f2ff; }
-body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; overflow: hidden; touch-action: none; }
-
-#map { position: absolute; inset: 0; filter: grayscale(1) brightness(0.2) contrast(1.2); background: #000; }
-
-/* STRZAŁKA GRACZA - KOMPAS */
-.player-arrow-wrapper { display: flex; align-items: center; justify-content: center; }
-.player-arrow-icon { 
-    width: 0; height: 0; 
-    border-left: 10px solid transparent; 
-    border-right: 10px solid transparent; 
-    border-bottom: 22px solid var(--blue); 
-    filter: drop-shadow(0 0 10px var(--blue));
-    transition: transform 0.1s linear;
+:root { 
+    --neon-green: #00ff41; 
+    --blood-red: #ff3333; 
+    --ui-blue: #00f2ff;
+    --panel-bg: rgba(0, 10, 0, 0.9);
 }
 
+body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; overflow: hidden; color: white; }
+
+/* MAPA */
+#map { position: absolute; inset: 0; filter: grayscale(1) brightness(0.25) contrast(1.2); background: #000; }
+
+/* HUD - GŁÓWNA WARSTWA */
 .hud { position: absolute; inset: 0; pointer-events: none; z-index: 1000; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
 .hud * { pointer-events: auto; }
 
-.status-box { background: rgba(0,20,0,0.9); border: 1px solid var(--green); padding: 8px; width: 120px; }
-.hp-bar-container { width: 100%; height: 6px; background: #111; margin-top: 4px; }
-#hp-bar { height: 100%; background: var(--red); box-shadow: 0 0 8px var(--red); transition: width 0.3s; }
+/* GÓRNY PANEL */
+.hud-top { display: flex; justify-content: space-between; align-items: flex-start; }
 
-.res { background: rgba(0,0,0,0.8); border-right: 3px solid var(--green); padding: 5px 12px; margin-bottom: 4px; text-align: right; }
-.btn-circle { width: 50px; height: 50px; border-radius: 50%; background: #000; border: 2px solid #555; color: #555; font-size: 1.2rem; }
+.status-panel, .resource-panel { 
+    background: var(--panel-bg); 
+    border: 1px solid var(--neon-green); 
+    padding: 10px;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+}
 
-.hud-bottom { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
-.btn-action { padding: 12px 20px; border: none; font-family: inherit; font-weight: bold; background: #111; color: #fff; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
-.btn-action.primary { background: var(--red); }
+.hp-bar-bg { width: 120px; height: 10px; background: #111; border: 1px solid #333; margin-top: 5px; }
+#hp-bar { height: 100%; background: var(--blood-red); box-shadow: 0 0 8px var(--blood-red); transition: width 0.3s; }
 
-.loot-icon, .zombie-icon { font-size: 28px; transition: all 0.5s linear; }
-.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--green); color: #000; padding: 8px 16px; font-weight: bold; z-index: 5000; }
+.res-item { font-size: 1.1rem; margin: 3px 0; text-align: right; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+
+/* STRZAŁKA GRACZA */
+.player-arrow-wrapper { display: flex; align-items: center; justify-content: center; }
+.player-arrow-icon { 
+    width: 0; height: 0; 
+    border-left: 12px solid transparent; 
+    border-right: 12px solid transparent; 
+    border-bottom: 24px solid var(--ui-blue); 
+    filter: drop-shadow(0 0 8px var(--ui-blue));
+    transition: transform 0.1s linear;
+}
+
+/* PRZYCISKI */
+.btn-circle { width: 50px; height: 50px; border-radius: 50%; background: #000; border: 2px solid #444; color: #888; cursor: pointer; }
+.btn-action { 
+    padding: 15px 25px; border: none; font-family: inherit; font-weight: bold; font-size: 1rem;
+    background: #111; color: white; border: 1px solid #444;
+    clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+}
+.btn-action.primary { background: var(--blood-red); border-color: var(--blood-red); }
+
+/* POWIADOMIENIA */
+.toast { position: fixed; top: 100px; left: 50%; transform: translateX(-50%); background: var(--neon-green); color: black; padding: 10px 20px; font-weight: bold; z-index: 5000; border-radius: 3px; }
+
+/* EKRAN STARTOWY */
+#landing-page { position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center; background: #000; text-align: center; }
+.btn-main { background: var(--blood-red); color: white; border: none; padding: 20px 40px; font-size: 1.2rem; cursor: pointer; font-family: inherit; margin-top: 20px; width: 80%; }
