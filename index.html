@@ -3,71 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA: DEAD ZONE</title>
+    <title>Z-MAPA: OSTATNI BASTION</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="landing-page">
-        <div class="zombie-bg"></div>
-        <div class="auth-container">
-            <h1 class="main-title">Z-MAPA</h1>
-            <div class="subtitle">OSTATNI BASTION LUDZKOŚCI</div>
-            
-            <div class="input-group">
-                <input type="email" id="email" placeholder="IDENTYFIKATOR (EMAIL)">
-                <input type="password" id="password" placeholder="KOD DOSTĘPU">
-            </div>
 
-            <button id="login-btn" class="blood-btn">WEJDŹ DO STREFY</button>
-            <button id="google-btn" class="btn-secondary">AUTORYZACJA GOOGLE</button>
-            
-            <div class="warning-text">UWAGA: WYMAGANY GPS I ODWAGA</div>
+    <div id="landing-page">
+        <div class="landing-overlay"></div>
+        <div class="content-wrapper">
+            <header>
+                <h1 class="glitch-logo">Z-MAPA</h1>
+                <p class="subtitle">REAL WORLD SURVIVAL RPG</p>
+            </header>
+
+            <section class="game-info">
+                <div class="info-card">
+                    <h3>🌍 ŚWIAT RZECZYWISTY</h3>
+                    <p>Gra wykorzystuje Twój prawdziwy GPS. Twoje miasto to teraz mapa przetrwania.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🧟 ZAGROŻENIE</h3>
+                    <p>Zombie reagują na Twoją obecność. Uciekaj lub walcz, by zdobywać zasoby.</p>
+                </div>
+                <div class="info-card">
+                    <h3>🏠 BUDUJ I PRZETRWAJ</h3>
+                    <p>Zbieraj złom z prawdziwych budynków. Buduj bazy, by się leczyć.</p>
+                </div>
+            </section>
+
+            <div class="auth-section">
+                <h2>PANEL DOSTĘPU</h2>
+                <input type="email" id="email" placeholder="Wprowadź e-mail">
+                <input type="password" id="password" placeholder="Hasło dostępu">
+                <button id="login-btn" class="btn-main pulse">ROZPOCZNIJ MISJĘ</button>
+                <button id="google-btn" class="btn-link">Zaloguj przez Google</button>
+            </div>
         </div>
     </div>
 
     <div id="game-container" style="display:none;">
         <div id="map"></div>
         
-        <div class="hud">
-            <div class="top-bar">
-                <div class="hp-section">
-                    <div class="hp-label">STAN ORGANIZMU</div>
-                    <div class="hp-track"><div id="hp-bar"></div></div>
+        <div class="ui-layer">
+            <div class="hud-top">
+                <div class="player-card">
+                    <span id="display-nick">OCALAŁY</span>
+                    <div class="hp-wrapper">
+                        <div id="hp-bar"></div>
+                    </div>
                 </div>
-                <div class="stats-section">
-                    <div class="stat">⚙️ <span id="s-scrap">0</span></div>
-                    <div class="stat">🪵 <span id="s-wood">0</span></div>
-                    <div class="stat">🍎 <span id="s-food">0</span></div>
-                </div>
+                <button id="logout-btn" class="btn-icon small">✕</button>
             </div>
 
-            <div class="side-menu">
-                <button id="btn-craft" class="side-btn" title="Warsztat">⚒️</button>
-                <button id="btn-base" class="side-btn" title="Buduj Bazę">🏠</button>
-                <button id="logout-btn" class="side-btn small">✖</button>
+            <div class="hud-resources">
+                <div class="res-box">⚙️ <span id="s-scrap">0</span></div>
+                <div class="res-box">🪵 <span id="s-wood">0</span></div>
+                <div class="res-box">🍎 <span id="s-food">0</span></div>
             </div>
 
-            <div class="bottom-controls">
-                <button id="btn-eat" class="eat-btn">🍎 ZJEDZ</button>
-                <button id="btn-attack" class="attack-btn">ELIMINUJ ZOMBIE</button>
+            <div class="hud-tools">
+                <button id="btn-craft" class="btn-circle">⚒️</button>
+                <button id="btn-base" class="btn-circle">🏠</button>
+            </div>
+
+            <div class="hud-actions">
+                <button id="btn-eat" class="btn-action sec">🍎 ZJEDZ</button>
+                <button id="btn-attack" class="btn-action prim">ATAKUJ CEL</button>
             </div>
         </div>
     </div>
 
-    <div id="craft-modal" class="modal" style="display:none;">
-        <div class="modal-box">
-            <h2 class="blood-text">WARSZTAT PRZETRWANIA</h2>
-            <div class="craft-item">
-                <p>PRODUKCJA ŻYWNOŚCI</p>
-                <small>KOSZT: 3x 🪵 + 2x ⚙️</small>
-                <button id="btn-craft-food" class="blood-btn">WYTWÓRZ 🍎</button>
+    <div id="craft-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-window">
+            <h2>WARSZTAT</h2>
+            <div class="recipe">
+                <p>RACJA ŻYWNOŚCIOWA</p>
+                <div class="cost">Koszt: 3x 🪵 + 2x ⚙️</div>
+                <button id="btn-craft-food" class="btn-main">WYTWÓRZ 🍎</button>
             </div>
-            <button id="btn-close-craft" class="close-txt">ZAMKNIJ OKNO</button>
+            <button id="btn-close-craft" class="btn-link">ZAMKNIJ</button>
         </div>
     </div>
 
-    <div id="msg" class="toast" style="display:none;"></div>
+    <div id="msg" class="notification" style="display:none;"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="script.js"></script>
