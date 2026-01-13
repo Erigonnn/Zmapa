@@ -3,66 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA: SURVIVAL</title>
+    <title>Z-MAPA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Orbitron', sans-serif; overflow: hidden; }
+        #landing-page { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .btn-login { background: #fff; color: #000; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        #game-container { display: none; height: 100vh; width: 100vw; position: relative; }
+        #map { height: 100%; width: 100%; }
+        .hud { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 5px; border: 1px solid #00ff41; }
+        .hp-bar { width: 150px; height: 10px; background: #333; border: 1px solid #ff4757; margin-top: 5px; }
+        #hp-fill { height: 100%; background: #ff4757; width: 100%; transition: 0.3s; }
+        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 1000; }
+        .btn-action { background: #ff4757; color: #fff; border: none; padding: 15px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
 
     <div id="landing-page">
-        <div class="hero-box">
-            <h1 class="title">Z-MAPA</h1>
-            <p class="tagline">PRZETRWAJ W TWOIM MIEŚCIE</p>
-            <button id="google-btn" class="login-btn">ZALOGUJ PRZEZ GOOGLE</button>
-        </div>
+        <h1 style="color: #00e5ff; font-size: 3rem;">Z-MAPA</h1>
+        <p>SYSTEM PRZETRWANIA GEO-LOKALNEGO</p>
+        <button id="google-btn" class="btn-login">ZALOGUJ PRZEZ GOOGLE</button>
+        <p id="debug-info" style="font-size: 0.7rem; color: #555; margin-top: 20px;"></p>
     </div>
 
-    <div id="game-container" style="display:none;">
+    <div id="game-container">
         <div id="map"></div>
-        
         <div class="hud">
-            <div class="top-row">
-                <div class="status-card">
-                    <div class="hp-label">HP: <span id="hp-text">100</span>%</div>
-                    <div class="hp-track"><div id="hp-bar"></div></div>
-                </div>
-                <div class="inventory-card">
-                    <small>BROŃ:</small>
-                    <div id="active-weapon">PIĘŚCI</div>
-                </div>
-            </div>
-
-            <div class="resource-row">
-                <div class="res-item">⚙️ <span id="s-scrap">0</span></div>
-                <div class="res-item">🪵 <span id="s-wood">0</span></div>
-                <div class="res-item">🍎 <span id="s-food">0</span></div>
-            </div>
-
-            <div class="action-row">
-                <button id="btn-attack" class="btn fight">ATAKUJ</button>
-                <button id="btn-craft" class="btn build">⚒️ WARSZTAT</button>
-                <button id="btn-eat" class="btn heal">🍎 ZJEDZ</button>
-            </div>
+            <div>BIOMETRIA</div>
+            <div class="hp-bar"><div id="hp-fill"></div></div>
+            <div style="margin-top:10px;">⚙️ ZŁOM: <span id="s-scrap">0</span></div>
+            <div>🪵 DREWNO: <span id="s-wood">0</span></div>
         </div>
-
-        <div id="craft-modal" class="modal" style="display:none;">
-            <div class="modal-content">
-                <h2>WARSZTAT</h2>
-                <div class="craft-line">
-                    <span>Nóż (+25 siły)</span>
-                    <button onclick="handleCraft('weapon')">30 ⚙️</button>
-                </div>
-                <div class="craft-line">
-                    <span>Baza (Schronienie)</span>
-                    <button onclick="handleCraft('base')">100 🪵</button>
-                </div>
-                <button class="close-btn" id="close-craft">ZAMKNIJ</button>
-            </div>
+        <div class="controls">
+            <button id="btn-attack" class="btn-action">ELIMINUJ CEL</button>
+            <button onclick="location.reload()" style="background:#333;" class="btn-action">WYLOGUJ</button>
         </div>
     </div>
-
-    <div id="toast" class="toast"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="script.js"></script>
