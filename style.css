@@ -89,39 +89,43 @@ body, html {
     padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;
 }
 
-/* --- IKONY NA MAPIE (ZMIENIONE) --- */
-/* Zombie: Większe, bez tła, płynny ruch */
+/* --- IKONY NA MAPIE (ULEPSZONE) --- */
 .zombie-marker {
-    font-size: 50px; 
+    font-size: 55px; /* Jeszcze nieco większe dla czytelności */
     text-align: center; 
     line-height: 1;
-    background: transparent !important; /* Usuwa biały kwadrat */
-    filter: drop-shadow(0 0 8px red);
+    background: transparent !important; 
+    filter: drop-shadow(0 0 10px red);
     pointer-events: none;
-    transition: transform 0.5s linear;
+    transition: transform 0.4s linear; /* Szybsze odświeżanie ruchu */
 }
 
-/* Loot: Animacja podskakiwania, bez tła */
 .loot-marker {
     font-size: 35px; 
     text-align: center; 
     line-height: 1;
-    background: transparent !important; /* Usuwa biały kwadrat */
+    background: transparent !important; 
     filter: drop-shadow(0 0 8px gold); 
     cursor: pointer;
     pointer-events: auto !important;
     animation: bounce 2s infinite;
 }
 
-/* Gracz: Strzałka */
+/* ZMIANA: Neonowa strzałka gracza - lepiej widoczna */
 .player-icon {
-    font-size: 40px;
-    color: #00e5ff;
+    font-size: 50px;
+    color: #ff00ff; /* Neonowy róż/magenta */
     text-align: center;
     line-height: 1;
     background: transparent !important;
-    filter: drop-shadow(0 0 10px #00e5ff);
-    transition: transform 0.3s ease;
+    filter: drop-shadow(0 0 15px #ff00ff);
+    transition: transform 0.1s linear; /* Minimalne opóźnienie dla płynnego obrotu */
+}
+
+/* Kontener dla strzałki wewnątrz ikony */
+#p-arrow {
+    display: inline-block;
+    font-weight: bold;
 }
 
 .base-icon {
@@ -137,13 +141,14 @@ body, html {
 /* --- POWIADOMIENIA I EKRAN ŚMIERCI --- */
 .toast {
     position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-    background: #00e5ff; color: #000; padding: 10px 20px;
-    border-radius: 5px; font-weight: bold; z-index: 4000; display: none;
+    background: #00e5ff; color: #000; padding: 12px 25px;
+    border-radius: 8px; font-weight: bold; z-index: 4000; display: none;
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
 }
 
 #death-screen {
-    position: fixed; inset: 0; background: rgba(50, 0, 0, 0.95); z-index: 5000;
+    position: fixed; inset: 0; background: rgba(50, 0, 0, 0.98); z-index: 5000;
     display: none; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 3rem; font-weight: bold; text-align: center; color: red;
+    font-size: 3rem; font-weight: bold; text-align: center; color: #fff;
     text-shadow: 0 0 20px red;
 }
