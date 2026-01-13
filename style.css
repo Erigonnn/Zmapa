@@ -1,50 +1,44 @@
 :root { 
-    --neon: #00ff41; --blood: #ff3333; --blue: #00f2ff; --gold: #ffd700;
-}
-body { margin: 0; background: #000; font-family: 'Share Tech Mono', monospace; color: #fff; overflow: hidden; }
-
-#map { position: absolute; inset: 0; filter: grayscale(1) brightness(0.4) contrast(1.2); }
-
-/* PANELE UI */
-.ui-panel { 
-    background: rgba(0, 25, 0, 0.95); 
-    border: 2px solid var(--neon); 
-    padding: 10px; 
-    box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+    --primary: #2ecc71; --danger: #e74c3c; --accent: #f1c40f; --bg: rgba(255, 255, 255, 0.9);
 }
 
-.hud-top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; pointer-events: none; z-index: 1000; }
-.hud-top * { pointer-events: auto; }
+body { margin: 0; font-family: 'Roboto', sans-serif; background: #eee; overflow: hidden; }
 
-.hp-track { width: 140px; height: 12px; background: #111; border: 1px solid var(--neon); margin-top: 5px; }
-#hp-bar { height: 100%; background: var(--blood); width: 100%; transition: 0.3s; }
+/* JASNA MAPA */
+#map { position: absolute; inset: 0; z-index: 1; }
 
-.res { font-size: 1.2rem; color: var(--neon); text-shadow: 0 0 5px var(--neon); font-weight: bold; margin: 2px 0; }
+/* UI DESIGN */
+.hud { position: absolute; inset: 0; pointer-events: none; z-index: 100; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+.hud * { pointer-events: auto; }
 
-/* PRZYCISKI BOCZNE */
-.hud-side { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
-.btn-circle { width: 60px; height: 60px; border-radius: 50%; background: #000; border: 3px solid var(--neon); color: var(--neon); font-size: 1.5rem; cursor: pointer; }
-.btn-circle.gold { border-color: var(--gold); color: var(--gold); }
+.top-bar { display: flex; justify-content: space-between; align-items: center; }
 
-/* PANEL CRAFTINGU (MODAL) */
-.modal { 
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-    width: 90%; max-width: 350px; background: rgba(0,0,0,0.95); border: 2px solid var(--gold); 
-    z-index: 2000; padding: 20px; box-shadow: 0 0 30px #000;
-}
-.modal-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--gold); margin-bottom: 15px; }
-.craft-item { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; padding: 10px; border: 1px solid #333; }
-.craft-item button { background: var(--gold); color: #000; border: none; padding: 10px; font-family: inherit; font-weight: bold; cursor: pointer; }
+.hp-container { background: var(--bg); padding: 10px; border-radius: 12px; border-left: 5px solid var(--danger); min-width: 150px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.hp-track { width: 100%; height: 8px; background: #ddd; border-radius: 4px; margin-top: 5px; overflow: hidden; }
+#hp-bar { height: 100%; background: var(--danger); width: 100%; transition: 0.3s; }
 
-/* STOPKA */
-.hud-bottom { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
-.btn-action { padding: 15px 25px; border: none; font-family: inherit; font-weight: bold; background: #222; color: #fff; border: 1px solid #444; }
-.btn-action.primary { background: var(--blood); border-color: var(--blood); }
+.weapon-slot { background: var(--bg); padding: 10px; border-radius: 12px; font-weight: bold; border: 1px solid #ddd; text-align: center; }
+
+.resources-grid { display: flex; gap: 10px; margin-top: 10px; }
+.res-box { background: var(--bg); padding: 8px 15px; border-radius: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+
+.action-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.action-btn { padding: 15px; border: none; border-radius: 12px; font-weight: bold; color: white; cursor: pointer; transition: 0.2s; }
+.action-btn.fight { background: var(--danger); }
+.action-btn.craft { background: #34495e; }
+.action-btn.eat { background: var(--primary); }
 
 /* STRZAŁKA GRACZA */
-.player-arrow-icon { 
+.player-arrow { 
     width: 0; height: 0; 
     border-left: 12px solid transparent; border-right: 12px solid transparent; 
-    border-bottom: 24px solid var(--blue); 
-    filter: drop-shadow(0 0 10px var(--blue));
+    border-bottom: 24px solid #3498db; 
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
+
+/* MODAL */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; }
+.item { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+
+.base-label { background: white; padding: 2px 8px; border-radius: 5px; border: 1px solid #2ecc71; font-weight: bold; }

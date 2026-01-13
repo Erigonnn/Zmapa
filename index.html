@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-MAPA: PROJEKT ZERO</title>
+    <title>Z-SURVIVAL: OPEN WORLD</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="landing-page">
-        <div class="landing-bg"></div>
-        <div class="content">
-            <h1 class="glitch" data-text="Z-MAPA">Z-MAPA</h1>
-            <button id="google-btn" class="btn-main">AKTYWUJ SYSTEM</button>
+        <div class="glass-card">
+            <h1 class="logo">Z-SURVIVAL</h1>
+            <p>DOŁĄCZ DO OCALAŁYCH</p>
+            <button id="google-btn" class="btn-primary">ZALOGUJ PRZEZ GOOGLE</button>
         </div>
     </div>
 
@@ -22,42 +22,45 @@
         <div id="map"></div>
         
         <div class="hud">
-            <div class="hud-top">
-                <div class="ui-panel biometria">
-                    <div class="label">BIOMETRIA</div>
+            <div class="top-bar">
+                <div class="hp-container">
+                    <div class="hp-label">BIOMETRIA: <span id="hp-val">100</span>%</div>
                     <div class="hp-track"><div id="hp-bar"></div></div>
                 </div>
-                <div class="ui-panel resources">
-                    <div class="res">⚙️ <span id="s-scrap">0</span></div>
-                    <div class="res">🪵 <span id="s-wood">0</span></div>
-                    <div class="res">🍎 <span id="s-food">0</span></div>
+                <div class="weapon-slot">
+                    <div class="label">BROŃ:</div>
+                    <div id="current-weapon">PIĘŚCI</div>
                 </div>
             </div>
 
-            <div class="hud-side">
-                <button id="btn-open-craft" class="btn-circle gold">⚒️</button>
-                <button id="logout-btn" class="btn-circle">✕</button>
+            <div class="resources-grid">
+                <div class="res-box">⚙️ <span id="s-scrap">0</span></div>
+                <div class="res-box">🪵 <span id="s-wood">0</span></div>
+                <div class="res-box">🍎 <span id="s-food">0</span></div>
             </div>
 
-            <div class="hud-bottom">
-                <button id="btn-eat" class="btn-action">🍎 ZJEDZ</button>
-                <button id="btn-attack" class="btn-action primary">ELIMINUJ CEL</button>
+            <div class="action-bar">
+                <button id="btn-attack" class="action-btn fight">ATAKUJ</button>
+                <button id="btn-open-craft" class="action-btn craft">WARSZTAT</button>
+                <button id="btn-eat" class="action-btn eat">ZJEDZ</button>
             </div>
         </div>
 
         <div id="craft-panel" class="modal" style="display:none;">
-            <div class="modal-header">
-                <h3>WARSZTAT POLOWY</h3>
-                <button id="btn-close-craft">✕</button>
-            </div>
-            <div class="craft-list">
-                <div class="craft-item">
-                    <span>🍎 Rycje (Jedzenie)</span>
-                    <button onclick="craft('food')">WYTWÓRZ (5⚙️ + 5🪵)</button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>WARSZTAT I BUDOWA</h2>
+                    <button id="close-craft">✕</button>
                 </div>
-                <div class="craft-item">
-                    <span>🏠 Baza (Schronienie)</span>
-                    <button onclick="craft('base')">POSTAW (50⚙️ + 50🪵)</button>
+                <div class="craft-items">
+                    <div class="item">
+                        <span>🔪 Nóż (+Atak)</span>
+                        <button onclick="craft('weapon')">50⚙️</button>
+                    </div>
+                    <div class="item">
+                        <span>🏠 Twoja Baza (Max 1)</span>
+                        <button onclick="craft('base')">100🪵 + 50⚙️</button>
+                    </div>
                 </div>
             </div>
         </div>
