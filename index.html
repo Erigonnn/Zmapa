@@ -3,18 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Z-SURVIVAL: OPEN WORLD</title>
+    <title>Z-MAPA: SURVIVAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="landing-page">
-        <div class="glass-card">
-            <h1 class="logo">Z-SURVIVAL</h1>
-            <p>DOŁĄCZ DO OCALAŁYCH</p>
-            <button id="google-btn" class="btn-primary">ZALOGUJ PRZEZ GOOGLE</button>
+        <div class="overlay"></div>
+        <div class="hero-content">
+            <h1 class="glitch-title">Z-MAPA</h1>
+            <p class="subtitle">SYSTEM PRZETRWANIA GEO-LOKALNEGO</p>
+            <div class="info-grid">
+                <span>🧟 Hordy w czasie rzeczywistym</span>
+                <span>📦 Łupy w Twojej okolicy</span>
+                <span>🏠 Buduj bazy z innymi</span>
+            </div>
+            <button id="google-btn" class="login-google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.svg" alt="">
+                ZALOGUJ PRZEZ GOOGLE
+            </button>
         </div>
     </div>
 
@@ -22,51 +31,47 @@
         <div id="map"></div>
         
         <div class="hud">
-            <div class="top-bar">
-                <div class="hp-container">
-                    <div class="hp-label">BIOMETRIA: <span id="hp-val">100</span>%</div>
-                    <div class="hp-track"><div id="hp-bar"></div></div>
+            <div class="hud-top">
+                <div class="stat-panel">
+                    <div class="hp-info">HP: <span id="hp-text">100</span>%</div>
+                    <div class="hp-bar-outer"><div id="hp-bar-inner"></div></div>
                 </div>
-                <div class="weapon-slot">
-                    <div class="label">BROŃ:</div>
-                    <div id="current-weapon">PIĘŚCI</div>
+                <div class="weapon-panel">
+                    <small>WYPOSAŻENIE:</small>
+                    <div id="active-item">PIĘŚCI</div>
                 </div>
             </div>
 
-            <div class="resources-grid">
-                <div class="res-box">⚙️ <span id="s-scrap">0</span></div>
-                <div class="res-box">🪵 <span id="s-wood">0</span></div>
-                <div class="res-box">🍎 <span id="s-food">0</span></div>
+            <div class="resource-bar">
+                <div class="res-tag">⚙️ <span id="s-scrap">0</span></div>
+                <div class="res-tag">🪵 <span id="s-wood">0</span></div>
+                <div class="res-tag">🍎 <span id="s-food">0</span></div>
             </div>
 
-            <div class="action-bar">
-                <button id="btn-attack" class="action-btn fight">ATAKUJ</button>
-                <button id="btn-open-craft" class="action-btn craft">WARSZTAT</button>
-                <button id="btn-eat" class="action-btn eat">ZJEDZ</button>
+            <div class="controls">
+                <button id="btn-attack" class="btn-main attack">ATAKUJ</button>
+                <button id="btn-craft" class="btn-main workshop">WARSZTAT</button>
+                <button id="btn-eat" class="btn-main eat">ZJEDZ</button>
             </div>
         </div>
 
-        <div id="craft-panel" class="modal" style="display:none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>WARSZTAT I BUDOWA</h2>
-                    <button id="close-craft">✕</button>
+        <div id="craft-modal" class="modal" style="display:none;">
+            <div class="modal-box">
+                <h2>CRAFTING</h2>
+                <div class="craft-option">
+                    <span>Nóż (+20 Atak)</span>
+                    <button onclick="doCraft('weapon')">30⚙️</button>
                 </div>
-                <div class="craft-items">
-                    <div class="item">
-                        <span>🔪 Nóż (+Atak)</span>
-                        <button onclick="craft('weapon')">50⚙️</button>
-                    </div>
-                    <div class="item">
-                        <span>🏠 Twoja Baza (Max 1)</span>
-                        <button onclick="craft('base')">100🪵 + 50⚙️</button>
-                    </div>
+                <div class="craft-option">
+                    <span>Baza (Schronienie)</span>
+                    <button onclick="doCraft('base')">100🪵</button>
                 </div>
+                <button class="close-btn" id="close-craft">POWRÓT</button>
             </div>
         </div>
     </div>
 
-    <div id="msg" class="toast" style="display:none;"></div>
+    <div id="toast" class="toast-msg"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="script.js"></script>
