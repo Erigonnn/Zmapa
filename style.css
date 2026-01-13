@@ -1,47 +1,40 @@
-:root { --main: #00ff41; --red: #ff3e3e; --blue: #00e5ff; }
+body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; overflow: hidden; background: #f0f0f0; }
 
-body, html { margin: 0; padding: 0; height: 100%; font-family: 'Orbitron', sans-serif; background: #000; color: #fff; }
-
-/* LANDING PAGE - DESIGN */
+/* EKRAN LOGOWANIA */
 #landing-page { 
-    height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2000') center/cover;
-    text-align: center; position: relative;
+    height: 100vh; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
+    display: flex; align-items: center; justify-content: center; text-align: center;
 }
-.overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
-.hero-content { position: relative; z-index: 2; padding: 20px; }
-.glitch-title { font-size: 4rem; margin: 0; color: var(--main); text-shadow: 2px 2px #000; }
-.info-grid { display: flex; flex-direction: column; gap: 10px; margin: 30px 0; font-size: 0.9rem; color: #ccc; }
+.hero-box { padding: 40px; border: 2px solid #00ff41; border-radius: 20px; background: rgba(0,0,0,0.8); }
+.title { font-family: 'Orbitron'; color: #00ff41; font-size: 3rem; margin: 0; }
+.login-btn { background: #fff; color: #000; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; margin-top: 20px; cursor: pointer; }
 
-.login-google-btn { 
-    background: #fff; color: #000; border: none; padding: 15px 30px; 
-    border-radius: 50px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0 auto;
-}
-
-/* GRA - JASNA MAPA */
+/* MAPA */
 #map { position: absolute; inset: 0; z-index: 1; }
 
-/* HUD */
-.hud { position: absolute; inset: 0; z-index: 10; pointer-events: none; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+/* HUD - CZYTELNY I JASNY */
+.hud { position: absolute; inset: 0; z-index: 100; pointer-events: none; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
 .hud * { pointer-events: auto; }
 
-.stat-panel { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; border-left: 4px solid var(--red); width: 140px; }
-.hp-bar-outer { width: 100%; height: 6px; background: #333; margin-top: 5px; }
-#hp-bar-inner { height: 100%; background: var(--red); width: 100%; transition: 0.4s; }
+.status-card, .inventory-card { background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #ddd; }
+.top-row { display: flex; justify-content: space-between; }
 
-.weapon-panel { background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; border-right: 4px solid var(--blue); text-align: right; }
+.hp-track { width: 100px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+#hp-bar { height: 100%; background: #ff4757; width: 100%; transition: 0.3s; }
 
-.resource-bar { display: flex; gap: 10px; justify-content: center; }
-.res-tag { background: #fff; color: #000; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.resource-row { display: flex; gap: 10px; justify-content: center; }
+.res-item { background: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-.controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.btn-main { padding: 18px 5px; border: none; border-radius: 12px; font-weight: bold; color: #fff; cursor: pointer; font-family: 'Orbitron'; }
-.attack { background: var(--red); }
-.workshop { background: #333; }
-.eat { background: var(--main); color: #000; }
+.action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.btn { padding: 15px 5px; border: none; border-radius: 12px; font-weight: bold; color: white; font-family: 'Orbitron'; cursor: pointer; }
+.fight { background: #ff4757; }
+.build { background: #2f3542; }
+.heal { background: #2ed573; }
 
 /* MODAL */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: flex; align-items: center; justify-content: center; }
-.modal-box { background: #111; padding: 30px; border-radius: 20px; width: 80%; border: 1px solid var(--main); }
-.craft-option { display: flex; justify-content: space-between; align-items: center; margin: 20px 0; }
-.craft-option button { background: var(--main); border: none; padding: 10px; border-radius: 5px; font-weight: bold; }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; color: black; }
+.craft-line { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px; border-bottom: 1px solid #eee; }
+
+/* IKONA GRACZA */
+.player-icon { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid #1e90ff; }
