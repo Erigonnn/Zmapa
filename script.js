@@ -44,18 +44,19 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function initGame() {
+    // tap: false pomaga przy szybkim klikaniu ataku na komórkach
     map = L.map('map', { zoomControl: false, tap: false }).setView([52.2, 21.0], 18);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
+    // POPRAWKA: Ikona gracza z wycentrowaną osią obrotu
     const playerIcon = L.divIcon({
-        html: '<div id="p-arrow">➤</div>',
+        html: '<div id="p-arrow" style="display:flex; justify-content:center; align-items:center; width:100%; height:100%;">➤</div>',
         className: 'player-icon',
-        iconSize: [50, 50],
-        iconAnchor: [25, 25]
+        iconSize: [60, 60],
+        iconAnchor: [30, 30] 
     });
     playerMarker = L.marker([52.2, 21.0], { icon: playerIcon }).addTo(map);
 
-    // GPS: Tylko do pozycji
     navigator.geolocation.watchPosition(pos => {
         const p = [pos.coords.latitude, pos.coords.longitude];
         playerMarker.setLatLng(p);
@@ -63,7 +64,7 @@ function initGame() {
         if (loots.length < 5) spawnLoot(p);
     }, null, { enableHighAccuracy: true });
 
-    // KOMPAS: Rozwiązanie lagów strzałki (Device Orientation)
+    // KOMPAS: Płynny obrót
     if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientationabsolute', (event) => {
             let heading = event.alpha;
@@ -71,7 +72,10 @@ function initGame() {
             
             if (heading !== null) {
                 const arrow = document.getElementById('p-arrow');
-                if (arrow) arrow.style.transform = `rotate(${-heading}deg)`;
+                if (arrow) {
+                    // Normalizacja obrotu
+                    arrow.style.transform = `rotate(${-heading}deg)`;
+                }
             }
         }, true);
     }
@@ -113,8 +117,9 @@ function gameLoop() {
     if (!playerMarker || !map) return;
     const pPos = playerMarker.getLatLng();
 
-    if(zombies.length < 5) {
-        const off = () => (Math.random() - 0.5) * 0.007;
+    // Spawn Zombie
+    if(zombies.length < 6) {
+        const off = () => (Math.random() - 0.5) * 0.012; // Większy rozrzut spawnu
         const zIcon = L.divIcon({ html: '🧟', className: 'zombie-marker', iconSize: [55, 55] });
         const z = L.marker([pPos.lat+off(), pPos.lng+off()], { icon: zIcon }).addTo(map);
         zombies.push(z);
@@ -123,21 +128,27 @@ function gameLoop() {
     zombies.forEach(z => {
         const zPos = z.getLatLng();
         const dist = map.distance(zPos, pPos);
-        let newLat, newLng;
-        const speed = 0.00007;
+        let newLat = zPos.lat;
+        let newLng = zPos.lng;
+        
+        // POPRAWKA: Prędkość zombie (zwiększona agresja)
+        const speed = 0.00015; 
 
-        if (dist < 100) {
-            newLat = zPos.lat + (pPos.lat > zPos.lat ? speed : -speed);
-            newLng = zPos.lng + (pPos.lng > zPos.lng ? speed : -speed);
+        if (dist < 150) { // Zauważają gracza ze 150 metrów
+            newLat += (pPos.lat > zPos.lat ? speed : -speed) * 0.7;
+            newLng += (pPos.lng > zPos.lng ? speed : -speed) * 0.7;
+            
+            // Atak zombie
             if(dist < 15) { 
-                state.hp -= 3; 
+                state.hp -= 2; 
                 updateUI(); 
-                if(navigator.vibrate) navigator.vibrate(200);
+                if(navigator.vibrate) navigator.vibrate(100);
                 if(state.hp <= 0) handleDeath();
             }
         } else {
-            newLat = zPos.lat + (Math.random() - 0.5) * 0.00003;
-            newLng = zPos.lng + (Math.random() - 0.5) * 0.00003;
+            // Szwendanie się (ruch losowy)
+            newLat += (Math.random() - 0.5) * 0.00008;
+            newLng += (Math.random() - 0.5) * 0.00008;
         }
         z.setLatLng([newLat, newLng]);
     });
@@ -160,29 +171,30 @@ function msg(m) {
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 500); }, 2000);
 }
 
-// WALKA: Usprawniony przycisk ataku
+// POPRAWKA: Walka - natychmiastowa reakcja i większy zasięg
 document.getElementById('btn-attack').onclick = (e) => {
-    e.preventDefault(); // Zapobiega błędom dotyku
+    e.preventDefault(); 
     const pPos = playerMarker.getLatLng();
-    let hitCount = 0;
+    let killedCount = 0;
     
+    // Filtrowanie zombie w zasięgu 60 metrów
     zombies = zombies.filter(z => {
         const dist = map.distance(pPos, z.getLatLng());
-        if(dist < 65) { // Zasięg ataku 65m
+        if(dist < 60) { 
             map.removeLayer(z);
             state.scrap += 12;
-            hitCount++;
-            return false;
+            killedCount++;
+            return false; // Usuń z tablicy
         }
-        return true;
+        return true; // Zostaw w tablicy
     });
 
-    if(hitCount > 0) {
+    if(killedCount > 0) {
         updateUI(true);
-        msg(`ZNEUTRALIZOWANO: ${hitCount} 💀`);
-        if(navigator.vibrate) navigator.vibrate(100);
+        msg(`WYELIMINOWANO: ${killedCount} 🧟`);
+        if(navigator.vibrate) navigator.vibrate([50, 30, 50]);
     } else {
-        msg("BRAK CELU W ZASIĘGU");
+        msg("BRAK CELU W ZASIĘGU!");
     }
 };
 
@@ -201,7 +213,7 @@ window.doCraft = async (type, cost) => {
         await setDoc(doc(db, "global_bases", auth.currentUser.uid), { lat: p.lat, lng: p.lng, owner: auth.currentUser.displayName });
         msg("BAZA ZABEZPIECZONA! 🏠");
     } else {
-        msg("NIEWYSTARCZAJĄCE ZASOBY!");
+        msg("BRAK ZASOBÓW!");
     }
     updateUI(true);
     toggleModal('craft');
