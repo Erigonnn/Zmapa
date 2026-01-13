@@ -9,36 +9,78 @@
     <style>
         body { margin: 0; padding: 0; background: #000; color: #fff; font-family: 'Orbitron', sans-serif; overflow: hidden; }
         #landing-page { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn-login { background: #fff; color: #000; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-login { background: #fff; color: #000; border: none; padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        
         #game-container { display: none; height: 100vh; width: 100vw; position: relative; }
-        #map { height: 100%; width: 100%; }
-        .hud { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 5px; border: 1px solid #00ff41; }
-        .hp-bar { width: 150px; height: 10px; background: #333; border: 1px solid #ff4757; margin-top: 5px; }
+        #map { height: 100%; width: 100%; z-index: 1; }
+
+        /* UI NAKŁADKA */
+        .hud-top { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.85); padding: 12px; border-radius: 8px; border: 1px solid #00ff41; min-width: 160px; }
+        .hp-bar { width: 100%; height: 8px; background: #333; border: 1px solid #ff4757; margin: 8px 0; }
         #hp-fill { height: 100%; background: #ff4757; width: 100%; transition: 0.3s; }
-        .controls { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; gap: 10px; z-index: 1000; }
-        .btn-action { background: #ff4757; color: #fff; border: none; padding: 15px 25px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .res-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; margin-top: 4px; }
+
+        /* BOCZNE PRZYCISKI */
+        .side-menu { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 12px; }
+        .circle-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid #ffc107; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; box-shadow: 0 0 10px rgba(255,193,7,0.3); }
+
+        /* DOLNE PRZYCISKI WALKI */
+        .action-bar { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: center; gap: 15px; z-index: 1000; }
+        .btn-main { padding: 15px 30px; border-radius: 8px; border: none; font-family: 'Orbitron'; font-weight: bold; color: #fff; cursor: pointer; font-size: 1rem; }
+        .attack { background: #ff4757; box-shadow: 0 4px 15px rgba(255,71,87,0.4); }
+        .heal { background: #2ed573; color: #000; }
+
+        /* OKNO WARSZTATU */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-box { background: #111; border: 2px solid #00ff41; padding: 25px; border-radius: 15px; width: 85%; }
+        .craft-item { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .craft-btn { background: #00ff41; color: #000; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="landing-page">
-        <h1 style="color: #00e5ff; font-size: 3rem;">Z-MAPA</h1>
-        <p>SYSTEM PRZETRWANIA GEO-LOKALNEGO</p>
-        <button id="google-btn" class="btn-login">ZALOGUJ PRZEZ GOOGLE</button>
-        <p id="debug-info" style="font-size: 0.7rem; color: #555; margin-top: 20px;"></p>
+        <h1 style="color: #00e5ff; font-size: 3.5rem; margin-bottom: 0;">Z-MAPA</h1>
+        <p style="letter-spacing: 2px; margin-top: 5px;">STREFA PRZETRWANIA</p>
+        <button id="google-btn" class="btn-login">AKTYWUJ SYSTEM (GOOGLE)</button>
     </div>
 
     <div id="game-container">
         <div id="map"></div>
-        <div class="hud">
-            <div>BIOMETRIA</div>
+        
+        <div class="hud-top">
+            <div style="font-size: 0.7rem; color: #00ff41;">STATUS BIOMETRYCZNY</div>
             <div class="hp-bar"><div id="hp-fill"></div></div>
-            <div style="margin-top:10px;">⚙️ ZŁOM: <span id="s-scrap">0</span></div>
-            <div>🪵 DREWNO: <span id="s-wood">0</span></div>
+            <div class="res-row">⚙️ <span id="s-scrap">0</span></div>
+            <div class="res-row">🪵 <span id="s-wood">0</span></div>
+            <div class="res-row">🍎 <span id="s-food">0</span></div>
+            <div style="margin-top: 8px; font-size: 0.6rem; color: #888;">BROŃ: <span id="s-weapon">PIĘŚCI</span></div>
         </div>
-        <div class="controls">
-            <button id="btn-attack" class="btn-action">ELIMINUJ CEL</button>
-            <button onclick="location.reload()" style="background:#333;" class="btn-action">WYLOGUJ</button>
+
+        <div class="side-menu">
+            <div class="circle-btn" onclick="toggleModal('craft')">⚒️</div>
+            <div class="circle-btn" onclick="toggleModal('base')">🏠</div>
+            <div class="circle-btn" onclick="location.reload()">📡</div>
+        </div>
+
+        <div class="action-bar">
+            <button id="btn-eat" class="btn-main heal">🍎 ZJEDZ</button>
+            <button id="btn-attack" class="btn-main attack">ATAKUJ CEL</button>
+        </div>
+    </div>
+
+    <div id="modal-craft" class="modal">
+        <div class="modal-box">
+            <h2 style="color:#00ff41; margin-top:0;">WARSZTAT</h2>
+            <div class="craft-item">
+                <span>Nóż (+20 Atak)</span>
+                <button class="craft-btn" onclick="doCraft('weapon', 30)">30⚙️</button>
+            </div>
+            <div class="craft-item">
+                <span>Baza (Schron)</span>
+                <button class="craft-btn" onclick="doCraft('base', 100)">100🪵</button>
+            </div>
+            <button onclick="toggleModal('craft')" style="width:100%; background:#333; color:#fff; padding:10px; border:none; margin-top:10px;">ZAMKNIJ</button>
         </div>
     </div>
 
