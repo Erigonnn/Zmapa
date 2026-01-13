@@ -1,40 +1,169 @@
-body, html { margin: 0; padding: 0; height: 100%; font-family: 'Roboto', sans-serif; overflow: hidden; background: #f0f0f0; }
-
-/* EKRAN LOGOWANIA */
-#landing-page { 
-    height: 100vh; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%);
-    display: flex; align-items: center; justify-content: center; text-align: center;
+/* GŁÓWNE USTAWIENIA */
+body, html { 
+    margin: 0; 
+    padding: 0; 
+    height: 100%; 
+    font-family: 'Orbitron', sans-serif; 
+    background: #000; 
+    color: #fff; 
+    overflow: hidden; 
 }
-.hero-box { padding: 40px; border: 2px solid #00ff41; border-radius: 20px; background: rgba(0,0,0,0.8); }
-.title { font-family: 'Orbitron'; color: #00ff41; font-size: 3rem; margin: 0; }
-.login-btn { background: #fff; color: #000; border: none; padding: 15px 30px; border-radius: 50px; font-weight: bold; margin-top: 20px; cursor: pointer; }
 
-/* MAPA */
-#map { position: absolute; inset: 0; z-index: 1; }
+/* INTERFEJS HUD (BIOMETRIA I ZASOBY) */
+.hud-top { 
+    position: absolute; 
+    top: 15px; 
+    left: 15px; 
+    z-index: 1000; 
+    background: rgba(0, 0, 0, 0.85); 
+    padding: 15px; 
+    border-radius: 10px; 
+    border: 2px solid #00ff41; 
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+    min-width: 180px;
+}
 
-/* HUD - CZYTELNY I JASNY */
-.hud { position: absolute; inset: 0; z-index: 100; pointer-events: none; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
-.hud * { pointer-events: auto; }
+.hp-bar { 
+    width: 100%; 
+    height: 12px; 
+    background: #222; 
+    border: 1px solid #ff4757; 
+    margin: 10px 0; 
+    border-radius: 5px;
+    overflow: hidden;
+}
 
-.status-card, .inventory-card { background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #ddd; }
-.top-row { display: flex; justify-content: space-between; }
+#hp-fill { 
+    height: 100%; 
+    background: linear-gradient(90deg, #ff4757, #ff6b81); 
+    width: 100%; 
+    transition: 0.5s ease; 
+}
 
-.hp-track { width: 100px; height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
-#hp-bar { height: 100%; background: #ff4757; width: 100%; transition: 0.3s; }
+.res-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 1rem; 
+    margin-top: 5px; 
+    color: #00e5ff;
+}
 
-.resource-row { display: flex; gap: 10px; justify-content: center; }
-.res-item { background: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+/* PRZYCISKI BOCZNE (MENU) */
+.side-menu { 
+    position: absolute; 
+    right: 15px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    z-index: 1000; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
+}
 
-.action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-.btn { padding: 15px 5px; border: none; border-radius: 12px; font-weight: bold; color: white; font-family: 'Orbitron'; cursor: pointer; }
-.fight { background: #ff4757; }
-.build { background: #2f3542; }
-.heal { background: #2ed573; }
+.circle-btn { 
+    width: 60px; 
+    height: 60px; 
+    border-radius: 50%; 
+    border: 2px solid #00e5ff; 
+    background: rgba(0, 0, 0, 0.9); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.8rem; 
+    cursor: pointer; 
+    transition: 0.2s;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+}
 
-/* MODAL */
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center; }
-.modal-content { background: white; padding: 30px; border-radius: 20px; width: 85%; color: black; }
-.craft-line { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; padding: 10px; border-bottom: 1px solid #eee; }
+.circle-btn:active { transform: scale(0.9); border-color: #00ff41; }
 
-/* IKONA GRACZA */
-.player-icon { width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 20px solid #1e90ff; }
+/* DOLNY PANEL AKCJI */
+.action-bar { 
+    position: absolute; 
+    bottom: 30px; 
+    width: 100%; 
+    display: flex; 
+    justify-content: center; 
+    gap: 20px; 
+    z-index: 1000; 
+}
+
+.btn-main { 
+    padding: 15px 35px; 
+    border-radius: 12px; 
+    border: none; 
+    font-family: 'Orbitron'; 
+    font-weight: bold; 
+    color: #fff; 
+    font-size: 1.1rem; 
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.attack { background: #ff4757; box-shadow: 0 5px 20px rgba(255, 71, 87, 0.5); }
+.heal { background: #2ed573; color: #000; box-shadow: 0 5px 20px rgba(46, 213, 115, 0.4); }
+
+/* IKONY NA MAPIE (ZOMBIE, LOOT, BAZY) */
+.zombie-icon { font-size: 30px; text-shadow: 0 0 10px red; filter: drop-shadow(0 0 5px rgba(255,0,0,0.8)); }
+.loot-icon { font-size: 25px; filter: drop-shadow(0 0 5px gold); }
+.base-icon { font-size: 35px; background: rgba(0, 255, 65, 0.2); border-radius: 50%; padding: 5px; border: 1px solid #00ff41; }
+
+/* OKNA MODALNE (WARSZTAT) */
+.modal { 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(0, 0, 0, 0.95); 
+    z-index: 2000; 
+    display: none; 
+    align-items: center; 
+    justify-content: center; 
+}
+
+.modal-box { 
+    background: #111; 
+    border: 3px solid #00ff41; 
+    padding: 30px; 
+    border-radius: 20px; 
+    width: 80%; 
+    max-width: 400px;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+}
+
+.craft-item { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin: 20px 0; 
+    padding-bottom: 10px; 
+    border-bottom: 1px solid #333; 
+}
+
+.craft-btn { 
+    background: #00ff41; 
+    color: #000; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    font-family: 'Orbitron';
+    cursor: pointer;
+}
+
+/* POWIADOMIENIA (TOAST) */
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 229, 255, 0.9);
+    color: #000;
+    padding: 15px 30px;
+    border-radius: 50px;
+    z-index: 3000;
+    font-weight: bold;
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
