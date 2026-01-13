@@ -16,11 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-const deathScreen = document.createElement('div');
-deathScreen.id = 'death-screen';
-deathScreen.innerHTML = '💀 STATUS: KRYTYCZNY (ZGINĄŁEŚ) 💀<br><button onclick="location.reload()" style="font-size:1.2rem; padding:15px 30px; margin-top:20px; background:#00ff41; border:none; border-radius:10px; cursor:pointer; font-family:Orbitron;">RESTART BIOMETRII</button>';
-document.body.appendChild(deathScreen);
-
+// Inicjalizacja stanu
 let state = { hp: 100, scrap: 50, wood: 20, food: 1, weapon: "PIĘŚCI", hasBase: false };
 let map, playerMarker;
 let zombies = [], loots = [];
@@ -44,13 +40,11 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function initGame() {
-    // tap: false pomaga przy szybkim klikaniu ataku na komórkach
     map = L.map('map', { zoomControl: false, tap: false }).setView([52.2, 21.0], 18);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // POPRAWKA: Ikona gracza z wycentrowaną osią obrotu
     const playerIcon = L.divIcon({
-        html: '<div id="p-arrow" style="display:flex; justify-content:center; align-items:center; width:100%; height:100%;">➤</div>',
+        html: '<div id="p-arrow">➤</div>',
         className: 'player-icon',
         iconSize: [60, 60],
         iconAnchor: [30, 30] 
@@ -64,18 +58,13 @@ function initGame() {
         if (loots.length < 5) spawnLoot(p);
     }, null, { enableHighAccuracy: true });
 
-    // KOMPAS: Płynny obrót
     if (window.DeviceOrientationEvent) {
         window.addEventListener('deviceorientationabsolute', (event) => {
             let heading = event.alpha;
             if (event.webkitCompassHeading) heading = event.webkitCompassHeading;
-            
             if (heading !== null) {
                 const arrow = document.getElementById('p-arrow');
-                if (arrow) {
-                    // Normalizacja obrotu
-                    arrow.style.transform = `rotate(${-heading}deg)`;
-                }
+                if (arrow) arrow.style.transform = `rotate(${-heading}deg)`;
             }
         }, true);
     }
@@ -102,7 +91,6 @@ function spawnLoot(p) {
             if(rand < 0.5) { state.scrap += 15; msgText = "+15 Złomu ⚙️"; }
             else if (rand < 0.8) { state.wood += 10; msgText = "+10 Drewna 🪵"; }
             else { state.food += 1; msgText = "+1 Jedzenie 🍎"; }
-            
             updateUI(true); 
             map.removeLayer(l);
             msg(msgText);
@@ -114,12 +102,11 @@ function spawnLoot(p) {
 }
 
 function gameLoop() {
-    if (!playerMarker || !map) return;
+    if (!playerMarker || !map || state.hp <= 0) return;
     const pPos = playerMarker.getLatLng();
 
-    // Spawn Zombie
     if(zombies.length < 6) {
-        const off = () => (Math.random() - 0.5) * 0.012; // Większy rozrzut spawnu
+        const off = () => (Math.random() - 0.5) * 0.012;
         const zIcon = L.divIcon({ html: '🧟', className: 'zombie-marker', iconSize: [55, 55] });
         const z = L.marker([pPos.lat+off(), pPos.lng+off()], { icon: zIcon }).addTo(map);
         zombies.push(z);
@@ -130,23 +117,18 @@ function gameLoop() {
         const dist = map.distance(zPos, pPos);
         let newLat = zPos.lat;
         let newLng = zPos.lng;
-        
-        // POPRAWKA: Prędkość zombie (zwiększona agresja)
-        const speed = 0.00015; 
+        const speed = 0.00018; 
 
-        if (dist < 150) { // Zauważają gracza ze 150 metrów
+        if (dist < 150) {
             newLat += (pPos.lat > zPos.lat ? speed : -speed) * 0.7;
             newLng += (pPos.lng > zPos.lng ? speed : -speed) * 0.7;
-            
-            // Atak zombie
             if(dist < 15) { 
-                state.hp -= 2; 
+                state.hp -= 4; // Zombie są groźniejsze
                 updateUI(); 
                 if(navigator.vibrate) navigator.vibrate(100);
                 if(state.hp <= 0) handleDeath();
             }
         } else {
-            // Szwendanie się (ruch losowy)
             newLat += (Math.random() - 0.5) * 0.00008;
             newLng += (Math.random() - 0.5) * 0.00008;
         }
@@ -154,12 +136,35 @@ function gameLoop() {
     });
 }
 
+// NOWA FUNKCJA ŚMIERCI
 function handleDeath() {
     state.hp = 0;
     updateUI(true);
+    
+    const ds = document.getElementById('death-screen');
+    ds.innerHTML = `
+        <div style="text-align:center; padding: 20px;">
+            <h1 style="font-size:3rem; color:#ff0000; margin-bottom:10px; text-shadow: 0 0 20px #f00;">ZOSTAŁEŚ ROZSZARPANY</h1>
+            <p style="font-size:1.2rem; color:#ccc; margin-bottom: 30px;">TWOJA BIOMETRIA WYGASŁA...</p>
+            <button onclick="location.reload()" style="
+                padding:20px 40px; 
+                background:#00ff41; 
+                color:#000; 
+                border:none; 
+                border-radius:10px; 
+                font-family:Orbitron; 
+                font-weight:bold; 
+                cursor:pointer;
+                box-shadow: 0 0 20px #00ff41;">
+                STWÓRZ NOWEGO OCALAŁEGO
+            </button>
+        </div>
+    `;
+    ds.style.display = 'flex';
+    
+    // Resetuj stan dla bazy danych po śmierci
     state = { hp: 100, scrap: 0, wood: 0, food: 0, weapon: "PIĘŚCI", hasBase: false };
     if(auth.currentUser) updateDoc(doc(db, "users", auth.currentUser.uid), state);
-    document.getElementById('death-screen').style.display = 'flex';
 }
 
 function msg(m) {
@@ -171,22 +176,22 @@ function msg(m) {
     setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 500); }, 2000);
 }
 
-// POPRAWKA: Walka - natychmiastowa reakcja i większy zasięg
+// ATAK
 document.getElementById('btn-attack').onclick = (e) => {
     e.preventDefault(); 
+    if(state.hp <= 0) return;
     const pPos = playerMarker.getLatLng();
     let killedCount = 0;
     
-    // Filtrowanie zombie w zasięgu 60 metrów
     zombies = zombies.filter(z => {
         const dist = map.distance(pPos, z.getLatLng());
         if(dist < 60) { 
             map.removeLayer(z);
             state.scrap += 12;
             killedCount++;
-            return false; // Usuń z tablicy
+            return false;
         }
-        return true; // Zostaw w tablicy
+        return true;
     });
 
     if(killedCount > 0) {
@@ -220,7 +225,9 @@ window.doCraft = async (type, cost) => {
 };
 
 function updateUI(cloud = false) {
-    document.getElementById('hp-fill').style.width = Math.max(0, state.hp) + "%";
+    const hpFill = document.getElementById('hp-fill');
+    if(hpFill) hpFill.style.width = Math.max(0, state.hp) + "%";
+    
     document.getElementById('s-scrap').innerText = state.scrap;
     document.getElementById('s-wood').innerText = state.wood;
     document.getElementById('s-food').innerText = state.food;
